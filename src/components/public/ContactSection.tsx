@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Mail, Phone, MessageSquare, Send, CheckCircle, Instagram, Youtube, Facebook, Twitter, Globe } from 'lucide-react';
 
 export const ContactSection: React.FC = () => {
   const { t } = useLanguage();
-  const player = DataService.getPlayerInfo();
+  const { player } = usePlayerInfo();
 
   const [form, setForm] = useState({
     senderName: '',

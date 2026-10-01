@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Settings } from 'lucide-react';
 
 interface FooterProps {
@@ -9,7 +10,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   const { t } = useLanguage();
-  const player = DataService.getPlayerInfo();
+  const { player } = usePlayerInfo();
 
   return (
     <footer className="bg-[#070a0f] border-t border-slate-800/80 py-12 text-slate-400 text-xs">

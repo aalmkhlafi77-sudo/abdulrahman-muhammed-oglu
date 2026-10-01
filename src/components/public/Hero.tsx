@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService, calculateAge, parseYoutubeUrl } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Play, User, FileText, MapPin, Flag, ChevronDown } from 'lucide-react';
 
 interface HeroProps {
@@ -9,7 +10,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
   const { t } = useLanguage();
-  const player = DataService.getPlayerInfo();
+  const { player } = usePlayerInfo();
   const heroConfig = DataService.getHeroConfig();
   const age = calculateAge(player.dob);
 

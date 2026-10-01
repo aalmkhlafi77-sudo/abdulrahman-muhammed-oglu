@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService, calculateAge } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { FileText, Download, Printer, ExternalLink, Check, Eye } from 'lucide-react';
 
 export const PlayerCV: React.FC = () => {
   const { t, lang } = useLanguage();
-  const player = DataService.getPlayerInfo();
+  const { player } = usePlayerInfo();
   const clubs = DataService.getClubs();
   const cvDoc = DataService.getCV();
   const [cvLang, setCvLang] = useState<'ar' | 'en'>(lang);

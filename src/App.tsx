@@ -32,6 +32,7 @@ import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding'
 
 import { VideoHighlight } from './types/player';
 import { DataService } from './services/dataService';
+import { PlayerInfoProvider } from './context/PlayerInfoContext';
 
 export default function App() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
@@ -74,6 +75,7 @@ export default function App() {
 
   return (
     <LanguageProvider>
+      <PlayerInfoProvider>
       <div className="min-h-screen bg-[#0b0f17] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
         
         {/* Public Header Navbar */}
@@ -138,6 +140,7 @@ export default function App() {
         )}
 
       </div>
+      </PlayerInfoProvider>
     </LanguageProvider>
   );
 }

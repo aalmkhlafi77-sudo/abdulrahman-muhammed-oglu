@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { PlayerInfo, HeroConfig } from '../../types/player';
 import { defaultImageDisplayConfig } from '../../data/initialData';
 import { MediaPicker } from '../common/MediaPicker';
@@ -10,20 +11,52 @@ import { Save, Check, FileImage, Layout, Sparkles, Sliders } from 'lucide-react'
 
 export const AdminPlayerProfile: React.FC = () => {
   const { t } = useLanguage();
-  const [player, setPlayer] = useState<PlayerInfo>(DataService.getPlayerInfo());
+  const { player: sharedPlayer, setPlayer: setSharedPlayer } = usePlayerInfo();
+  const [player, setPlayer] = useState<PlayerInfo>(sharedPlayer);
   const [heroConfig, setHeroConfig] = useState<HeroConfig>(DataService.getHeroConfig());
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'hero' | 'imageControls'>('profile');
 
   // Active Picker Modal states
   const [activePicker, setActivePicker] = useState<'profile' | 'hero' | 'mobileHero' | 'cutout' | null>(null);
 
-  const handleSave = (e?: React.FormEvent) => {
+  useEffect(() => {
+    fetch('/api/player')
+      .then(async response => response.ok ? await response.json() as PlayerInfo : null)
+      .then(value => {
+        if (value) {
+          setPlayer(value);
+          setSharedPlayer(value);
+        }
+      })
+      .catch(error => console.warn('Could not load player profile from server:', error));
+  }, [setSharedPlayer]);
+
+  const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    DataService.updatePlayerInfo(player);
-    DataService.updateHeroConfig(heroConfig);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSaveError(false);
+    try {
+      const response = await fetch('/api/player', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(player),
+      });
+      if (!response.ok) {
+        setSaveError(true);
+        return;
+      }
+      const savedPlayer = await response.json() as PlayerInfo;
+      setPlayer(savedPlayer);
+      setSharedPlayer(savedPlayer);
+      DataService.updateHeroConfig(heroConfig);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error('Could not save player profile:', error);
+      setSaveError(true);
+    }
   };
 
   return (
@@ -49,6 +82,11 @@ export const AdminPlayerProfile: React.FC = () => {
         <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 animate-fadeIn">
           <Check className="w-4 h-4 shrink-0" />
           <span>{t('تم حفظ جميع البيانات والصور بنجاح!', 'All player details, images & hero settings saved successfully!')}</span>
+        </div>
+      )}
+      {saveError && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          {t('تعذر حفظ الملف. تحقق من تسجيل الدخول واتصال الخادم.', 'Could not save profile. Check your login and server connection.')}
         </div>
       )}
 

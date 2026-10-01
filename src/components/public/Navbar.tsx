@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Play, Globe, Menu, X, Settings, Download } from 'lucide-react';
 import { DataService } from '../../services/dataService';
+import { usePlayerInfo } from '../../context/PlayerInfoContext';
 
 interface NavbarProps {
   onOpenAdmin: () => void;
@@ -12,7 +13,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
   const { lang, toggleLang, isRtl, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const player = DataService.getPlayerInfo();
+  const { player } = usePlayerInfo();
 
   useEffect(() => {
     const handleScroll = () => {
