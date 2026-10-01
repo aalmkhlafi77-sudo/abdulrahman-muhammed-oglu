@@ -6,13 +6,13 @@ import authRouter from './server/routes/auth';
 import playerRouter from './server/routes/player';
 import { careerRoutes, clubRoutes } from './server/routes/coreContent';
 import imageRoutes from './server/routes/images';
+import { db } from './server/config/database';
 import { getUploadConfig, storedImageName } from './server/config/uploads';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+export const app = express();
 
 app.use(express.json({ limit: '50mb' }));
 app.use('/api/auth', authRouter);
@@ -20,6 +20,16 @@ app.use('/api/player', playerRouter);
 app.use('/api', clubRoutes);
 app.use('/api/career', careerRoutes);
 app.use('/api', imageRoutes);
+
+app.get('/api/health', async (_req, res) => {
+  try {
+    await db.query('SELECT 1');
+    return res.json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    console.error('[Health] Database connection failed:', error);
+    return res.status(503).json({ status: 'unavailable', database: 'unavailable' });
+  }
+});
 
 const uploadConfig = getUploadConfig();
 if (uploadConfig) {
@@ -69,26 +79,3 @@ app.post('/api/data', (req, res) => {
     return res.status(500).json({ error: 'Failed to save server data' });
   }
 });
-
-// Vite middleware for development & static serving for production
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true, host: '0.0.0.0', port: Number(PORT) },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    });
-  }
-
-  app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`🚀 Portfolio Server running on http://0.0.0.0:${PORT}`);
-  });
-}
-
-startServer();
