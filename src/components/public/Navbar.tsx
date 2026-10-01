@@ -64,6 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
                     <img 
                       src={logoSrc} 
                       alt="Brand Logo" 
+                      referrerPolicy="no-referrer"
                       style={{
                         objectFit: branding.logoFit === 'original' ? 'none' : branding.logoFit,
                         maxWidth: `${branding.desktopLogoWidth}px`

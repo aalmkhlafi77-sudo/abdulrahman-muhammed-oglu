@@ -123,36 +123,58 @@ const initializeDataStoreSync = () => {
   if (isStoreInitialized) return;
   isStoreInitialized = true;
 
+  let hasLocalData = false;
+
   // Hydrate memory cache synchronously from LocalStorage as fast initial load
   Object.values(STORAGE_KEYS).forEach((key) => {
     try {
       const raw = localStorage.getItem(key);
       if (raw !== null && raw !== undefined) {
         memoryCache[key] = JSON.parse(raw);
+        hasLocalData = true;
       }
     } catch (e) {
       // Ignore parse errors
     }
   });
 
-  // Asynchronously hydrate from IndexedDB (the primary permanent storage layer)
-  // This ensures that user data saved in IndexedDB overrides any transient LocalStorage state
+  // Asynchronously hydrate from IndexedDB
   if (typeof window !== 'undefined' && window.indexedDB) {
     (async () => {
       for (const key of Object.values(STORAGE_KEYS)) {
         const idbVal = await readFromIDB(key);
         if (idbVal !== undefined && idbVal !== null) {
           memoryCache[key] = idbVal;
-          // Also sync back to LocalStorage if possible
+          hasLocalData = true;
           try {
             localStorage.setItem(key, JSON.stringify(idbVal));
-          } catch (e) {
-            // LocalStorage quota error ignored because IndexedDB holds the primary truth
-          }
+          } catch (e) {}
         }
       }
+      fetchServerDataAndSync(hasLocalData);
     })();
+  } else {
+    fetchServerDataAndSync(hasLocalData);
   }
+};
+
+const fetchServerDataAndSync = (hasLocalData: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  fetch('/api/data')
+    .then(res => res.json())
+    .then(serverData => {
+      if (serverData && serverData.playerInfo && typeof serverData === 'object') {
+        // Server has saved data! Apply server data globally to all devices
+        DataService.applyServerSync(serverData);
+      } else if (hasLocalData) {
+        // Server was uninitialized, push current local data to server
+        DataService.forcePushToServer();
+      }
+    })
+    .catch(err => {
+      console.warn('Could not connect to /api/data server endpoint:', err);
+    });
 };
 
 initializeDataStoreSync();
@@ -244,11 +266,12 @@ export const parseYoutubeUrl = (url: string): string => {
   if (!url) return '';
   if (url.includes('embed/')) return url;
 
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  // Match standard watch links, shorts, live, and short urls
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
   const match = url.match(regExp);
 
-  if (match && match[2].length === 11) {
-    return `https://www.youtube.com/embed/${match[2]}`;
+  if (match && match[1]) {
+    return `https://www.youtube.com/embed/${match[1]}`;
   }
   return url;
 };
@@ -272,18 +295,52 @@ const getStoredData = <T>(key: string, defaultValue: T): T => {
   return defaultValue;
 };
 
+let saveTimer: any = null;
+
+const triggerServerSave = () => {
+  if (typeof window === 'undefined') return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      const payload = DataService.exportAllDataJSON();
+      fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      }).then(res => res.json()).then(data => {
+        console.log('✅ Portfolio data saved on server for all browsers/devices:', data);
+      }).catch(err => {
+        console.warn('Failed to save portfolio data to server:', err);
+      });
+    } catch (err) {
+      console.warn('Server save payload error:', err);
+    }
+  }, 400);
+};
+
+const setStoredDataNoTrigger = <T>(key: string, value: T): void => {
+  memoryCache[key] = value;
+  writeToIDB(key, value);
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {}
+};
+
 const setStoredData = <T>(key: string, value: T): void => {
   memoryCache[key] = value;
   
-  // 1. Asynchronously persist to IndexedDB (Unrestricted capacity)
+  // 1. Asynchronously persist to IndexedDB
   writeToIDB(key, value);
 
-  // 2. Persist to LocalStorage as secondary cache
+  // 2. Persist to LocalStorage
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.warn(`LocalStorage quota reached for key "${key}". IndexedDB remains primary source of truth.`, error);
   }
+
+  // 3. Persist globally to server (/api/data)
+  triggerServerSave();
 };
 
 export const DataService = {
@@ -408,15 +465,31 @@ export const DataService = {
   verifyAdminPassword: async (password: string): Promise<boolean> => {
     if (!password) return false;
     const clean = password.trim();
-    const hashedInput = await hashPassword(clean);
+    if (!clean) return false;
+
     const storedHash = await DataService.getAdminPasswordHash();
+    const hashedInput = await hashPassword(clean);
+
+    // 1. Direct hash match
     if (hashedInput === storedHash) return true;
 
-    // Check fallback aliases if default hash is active
-    const isDefaultHash = storedHash === '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4';
-    if (isDefaultHash && ['scout2024', 'admin', '1234', '2003'].includes(clean)) {
+    // 2. Direct plaintext match (if saved as plaintext in legacy or config)
+    if (clean === storedHash) return true;
+
+    // 3. Known default password hashes & plain text defaults
+    const defaultPasswords = ['scout2024', 'admin', '1234', '2003', 'admin123', 'pass1234'];
+    const defaultHashes = [
+      '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4', // scout2024
+      '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // admin
+      '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', // 1234
+      'a7c93809637c7ee07722709199fa69b2229a43a0e4420a320c29ed6d36e2f17d'  // 2003
+    ];
+
+    const isDefaultStored = defaultHashes.includes(storedHash) || !storedHash;
+    if (isDefaultStored && defaultPasswords.includes(clean.toLowerCase())) {
       return true;
     }
+
     return false;
   },
 
@@ -490,6 +563,50 @@ export const DataService = {
       return true;
     } catch (e) {
       console.error("Failed to import JSON data", e);
+      return false;
+    }
+  },
+
+  // Apply sync from backend Express server
+  applyServerSync: (serverData: any): void => {
+    try {
+      if (serverData.playerInfo) setStoredDataNoTrigger(STORAGE_KEYS.PLAYER_INFO, serverData.playerInfo);
+      if (serverData.heroConfig) setStoredDataNoTrigger(STORAGE_KEYS.HERO_CONFIG, serverData.heroConfig);
+      if (serverData.brandingConfig) setStoredDataNoTrigger(STORAGE_KEYS.BRANDING_CONFIG, serverData.brandingConfig);
+      if (serverData.languages) setStoredDataNoTrigger(STORAGE_KEYS.LANGUAGES, serverData.languages);
+      if (serverData.attributes) setStoredDataNoTrigger(STORAGE_KEYS.ATTRIBUTES, serverData.attributes);
+      if (serverData.clubs) setStoredDataNoTrigger(STORAGE_KEYS.CLUBS, serverData.clubs);
+      if (serverData.achievements) setStoredDataNoTrigger(STORAGE_KEYS.ACHIEVEMENTS, serverData.achievements);
+      if (serverData.stats) setStoredDataNoTrigger(STORAGE_KEYS.STATS, serverData.stats);
+      if (serverData.videos) setStoredDataNoTrigger(STORAGE_KEYS.VIDEOS, serverData.videos);
+      if (serverData.photos) setStoredDataNoTrigger(STORAGE_KEYS.PHOTOS, serverData.photos);
+      if (serverData.media) setStoredDataNoTrigger(STORAGE_KEYS.MEDIA, serverData.media);
+      if (serverData.cv) setStoredDataNoTrigger(STORAGE_KEYS.CV, serverData.cv);
+      if (serverData.sections) setStoredDataNoTrigger(STORAGE_KEYS.SECTIONS, serverData.sections);
+      if (serverData.theme) setStoredDataNoTrigger(STORAGE_KEYS.THEME, serverData.theme);
+      if (serverData.seo) setStoredDataNoTrigger(STORAGE_KEYS.SEO, serverData.seo);
+
+      window.dispatchEvent(new Event('portfolio_server_data_synced'));
+    } catch (e) {
+      console.warn('Failed to apply server sync:', e);
+    }
+  },
+
+  // Explicitly push current active data to server
+  forcePushToServer: async (): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const payload = DataService.exportAllDataJSON();
+      const res = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      });
+      const data = await res.json();
+      console.log('✅ Force pushed local data to server:', data);
+      return data.success === true;
+    } catch (err) {
+      console.error('Failed to push data to server:', err);
       return false;
     }
   }

@@ -67,6 +67,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
             <img 
               src={imageSrc} 
               alt={player.nameEn}
+              referrerPolicy="no-referrer"
               style={{
                 objectFit: imgDisp.fit as any,
                 objectPosition: `${focalX}% ${focalY}%`,

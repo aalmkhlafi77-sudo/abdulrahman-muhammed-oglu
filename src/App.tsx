@@ -36,6 +36,15 @@ import { DataService } from './services/dataService';
 export default function App() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [, setSyncVersion] = useState(0);
+
+  React.useEffect(() => {
+    const handleSync = () => {
+      setSyncVersion(v => v + 1);
+    };
+    window.addEventListener('portfolio_server_data_synced', handleSync);
+    return () => window.removeEventListener('portfolio_server_data_synced', handleSync);
+  }, []);
 
   const handleOpenOfficialHighlights = () => {
     const videos = DataService.getVideos();

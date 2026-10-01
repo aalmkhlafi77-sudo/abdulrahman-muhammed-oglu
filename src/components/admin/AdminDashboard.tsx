@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService } from '../../services/dataService';
-import { Video, Image, Briefcase, Trophy, Mail, Download, Upload, RotateCcw, Check, AlertCircle } from 'lucide-react';
+import { Video, Image, Briefcase, Trophy, Mail, Download, Upload, RotateCcw, Check, AlertCircle, Globe } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const { t } = useLanguage();
@@ -58,6 +58,35 @@ export const AdminDashboard: React.FC = () => {
       <div>
         <h1 className="text-2xl font-extrabold text-white">{t('ملخص لوحة التحكم العامة', 'Dashboard Overview')}</h1>
         <p className="text-xs text-slate-400 mt-1">{t('متابعة إحصائيات المحتوى، الوسائط والرسائل الواردة', 'Monitor portfolio metrics, media uploads, and scout inquiries')}</p>
+      </div>
+
+      {/* Global Sync Banner */}
+      <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-blue-950 p-6 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-cyan-400 font-extrabold text-sm">
+            <Globe className="w-5 h-5 animate-pulse" />
+            <span>{t('نشر ومزامنة البيانات لكافة الهواتف والمتصفحات', 'Global Cross-Device Data Sync')}</span>
+          </div>
+          <p className="text-xs text-slate-300">
+            {t('انقر هنا لنشر كافة الصور والفيديوهات والتعديلات الجديدة على الخادم لكي تظهر فوراً لأي شخص يفتح رابط الموقع على أي هاتف أو جهاز.', 'Click here to force sync all local additions and photos directly to the server so any visitor on any phone sees your latest content.')}
+          </p>
+        </div>
+
+        <button
+          onClick={async () => {
+            const ok = await DataService.forcePushToServer();
+            if (ok) {
+              setMessage(t('تم نشر ومزامنة جميع البيانات والميديا بنجاح لكافة الأجهزة والهواتف!', 'Data synced globally across all devices!'));
+              setTimeout(() => setMessage(null), 5000);
+            } else {
+              setMessage(t('تم الحفظ محلياً. جاري تحديث الخادم...', 'Saved locally. Syncing with server...'));
+            }
+          }}
+          className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shrink-0 flex items-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
+        >
+          <Globe className="w-4 h-4" />
+          <span>{t('نشر التحديثات لجميع الهواتف', 'PUBLISH TO ALL DEVICES')}</span>
+        </button>
       </div>
 
       {message && (

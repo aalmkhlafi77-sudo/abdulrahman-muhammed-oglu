@@ -97,6 +97,7 @@ export const PhotoGallery: React.FC = () => {
                 src={photo.imageUrl} 
                 alt={photo.titleEn || 'Player Photo'} 
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 style={{
                   objectPosition: photo.focalPoint 
                     ? `${photo.focalPoint.x}% ${photo.focalPoint.y}%` 
@@ -166,6 +167,7 @@ export const PhotoGallery: React.FC = () => {
             <img 
               src={filteredPhotos[lightboxIndex].imageUrl} 
               alt="Expanded view" 
+              referrerPolicy="no-referrer"
               className="max-w-full max-h-[70vh] object-contain rounded-xl border border-slate-800 shadow-2xl mb-4"
             />
             <div className="text-center">

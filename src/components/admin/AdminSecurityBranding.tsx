@@ -167,7 +167,7 @@ export const AdminSecurityBranding: React.FC = () => {
             {/* Current Password Field */}
             <div className="space-y-1.5">
               <label className="block text-slate-300 font-bold">{t('كلمة المرور الحالية', 'Current Password')}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input 
                   type={showCurrent ? 'text' : 'password'}
                   required
@@ -179,11 +179,14 @@ export const AdminSecurityBranding: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-cyan-400 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                  className="px-3.5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                   title={showCurrent ? t('إخفاء كلمة المرور', 'Hide Password') : t('إظهار كلمة المرور', 'Show Password')}
                   aria-label="Toggle Current Password Visibility"
                 >
                   {showCurrent ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4" />}
+                  <span className="text-[11px] font-bold hidden sm:inline">
+                    {showCurrent ? t('إخفاء', 'Hide') : t('إظهار', 'Show')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -191,7 +194,7 @@ export const AdminSecurityBranding: React.FC = () => {
             {/* New Password Field */}
             <div className="space-y-1.5">
               <label className="block text-slate-300 font-bold">{t('كلمة المرور الجديدة', 'New Password')}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input 
                   type={showNew ? 'text' : 'password'}
                   required
@@ -203,11 +206,14 @@ export const AdminSecurityBranding: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-cyan-400 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                  className="px-3.5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                   title={showNew ? t('إخفاء كلمة المرور', 'Hide Password') : t('إظهار كلمة المرور', 'Show Password')}
                   aria-label="Toggle New Password Visibility"
                 >
                   {showNew ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4" />}
+                  <span className="text-[11px] font-bold hidden sm:inline">
+                    {showNew ? t('إخفاء', 'Hide') : t('إظهار', 'Show')}
+                  </span>
                 </button>
               </div>
 
@@ -228,7 +234,7 @@ export const AdminSecurityBranding: React.FC = () => {
             {/* Confirm New Password Field */}
             <div className="space-y-1.5">
               <label className="block text-slate-300 font-bold">{t('تأكيد كلمة المرور الجديدة', 'Confirm New Password')}</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <input 
                   type={showConfirm ? 'text' : 'password'}
                   required
@@ -240,11 +246,14 @@ export const AdminSecurityBranding: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-cyan-400 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                  className="px-3.5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                   title={showConfirm ? t('إخفاء كلمة المرور', 'Hide Password') : t('إظهار كلمة المرور', 'Show Password')}
                   aria-label="Toggle Confirm Password Visibility"
                 >
                   {showConfirm ? <EyeOff className="w-4 h-4 text-cyan-400" /> : <Eye className="w-4 h-4" />}
+                  <span className="text-[11px] font-bold hidden sm:inline">
+                    {showConfirm ? t('إخفاء', 'Hide') : t('إظهار', 'Show')}
+                  </span>
                 </button>
               </div>
             </div>

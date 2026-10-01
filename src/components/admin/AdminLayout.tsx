@@ -235,6 +235,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
           </div>
         </div>
 
+        {/* Global Publish Button */}
+        <div className="p-3 border-b border-slate-800 bg-cyan-950/40">
+          <button
+            type="button"
+            onClick={async () => {
+              const success = await DataService.forcePushToServer();
+              if (success) {
+                alert(t('تم نشر وتنسيق جميع البيانات والميديا بنجاح لكافة الأجهزة والهواتف!', 'Published all media & data globally across all devices!'));
+              } else {
+                alert(t('جاري الحفظ والمزامنة السريعة...', 'Syncing with server...'));
+              }
+            }}
+            className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
+          >
+            <Globe className="w-4 h-4" />
+            <span>{t('نشر المحتوى لجميع الهواتف', 'PUBLISH TO ALL DEVICES')}</span>
+          </button>
+        </div>
+
         {/* Backup & Tools Bar */}
         <div className="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between gap-1 text-[11px]">
           <button

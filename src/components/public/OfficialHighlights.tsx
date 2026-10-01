@@ -41,17 +41,13 @@ export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVi
             <img 
               src={officialVideo.thumbnailUrl} 
               alt={officialVideo.titleEn}
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-110"
             />
             {/* Scrim gradients on desktop */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f17]/90 via-[#0b0f17]/30 to-transparent hidden sm:block" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f17]/90 via-transparent to-[#0b0f17]/60 hidden sm:block" />
             <div className="absolute inset-0 bg-slate-950/20 sm:hidden block" />
-
-            {/* Category Tag (Mobile: Top Left, Desktop: in overlay info) */}
-            <div className="absolute top-3 left-3 sm:hidden px-2.5 py-1 rounded-md bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[10px] font-extrabold uppercase font-latin z-10">
-              {officialVideo.category}
-            </div>
 
             {/* Duration Tag */}
             <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[11px] sm:text-xs font-bold font-latin flex items-center gap-1.5 shadow-lg z-10">
@@ -100,7 +96,10 @@ export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVi
           {/* Mobile Info Body Below Thumbnail (Clean layout matching other video container) */}
           <div className="sm:hidden p-5 bg-slate-900 flex flex-col justify-between space-y-3.5 border-t border-slate-800/80">
             <div>
-              <h3 className="text-base font-extrabold text-cyan-400 leading-snug mb-2">
+              <span className="px-2.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-[10px] font-extrabold uppercase font-latin mb-2 inline-block">
+                {officialVideo.category}
+              </span>
+              <h3 className="text-base font-extrabold text-white leading-snug mb-2">
                 {t(officialVideo.titleAr, officialVideo.titleEn)}
               </h3>
               {officialVideo.descriptionAr && (
