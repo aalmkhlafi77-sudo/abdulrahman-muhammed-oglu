@@ -1,11 +1,11 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { Activity, Info } from 'lucide-react';
 
 export const PerformanceStats: React.FC = () => {
   const { t } = useLanguage();
-  const stats = DataService.getStats();
+const { stats } = useStructuredContent();
 
   // Filter stats that have at least one defined metric to avoid displaying empty cards
   const activeStats = stats.filter(s => 

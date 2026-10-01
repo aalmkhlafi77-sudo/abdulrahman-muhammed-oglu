@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { VideoHighlight } from '../../types/player';
 import { Play, Film, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
 
@@ -10,7 +10,7 @@ interface OfficialHighlightsProps {
 
 export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVideo }) => {
   const { t } = useLanguage();
-  const videos = DataService.getVideos();
+const { videos } = useStructuredContent();
   const officialVideo = videos.find(v => v.featured) || videos[0];
 
   if (!officialVideo) return null;

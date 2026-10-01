@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { ClubExperience } from '../../types/player';
 import { ImagePicker } from './ImagePicker';
 import { Plus, Trash2, ArrowUp, ArrowDown, Save, Edit, Check, Link, Landmark } from 'lucide-react';
 
 export const AdminCareer: React.FC = () => {
   const { t } = useLanguage();
-  const [clubs, setClubs] = useState<ClubExperience[]>(DataService.getClubs());
+  const { career: clubs, setCareer } = useStructuredContent();
   const [editingClub, setEditingClub] = useState<ClubExperience | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const saveAll = (updated: ClubExperience[]) => {
-    setClubs(updated);
-    DataService.updateClubs(updated);
+    setCareer(updated);
   };
 
   const moveClub = (index: number, direction: 'up' | 'down') => {
@@ -27,26 +28,31 @@ export const AdminCareer: React.FC = () => {
     // re-index sortOrder
     const reordered = newClubs.map((c, i) => ({ ...c, sortOrder: i + 1 }));
     saveAll(reordered);
+    void Promise.all(reordered.filter(item => item.careerEntryId).map(item => fetch(`/api/career/${item.careerEntryId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) })));
   };
 
   const deleteClub = (id: string) => {
     if (window.confirm(t('هل أنت متأكد من حذف هذا النادي؟', 'Are you sure you want to delete this club?'))) {
-      const filtered = clubs.filter(c => c.id !== id);
-      saveAll(filtered);
+      const club = clubs.find(item => item.id === id);
+      if (!club?.careerEntryId) { saveAll(clubs.filter(c => c.id !== id)); return; }
+      void fetch(`/api/career/${club.careerEntryId}`, { method: 'DELETE' }).then(async response => {
+        if (!response.ok) throw new Error('Delete failed');
+        saveAll(clubs.filter(c => c.id !== id));
+      }).catch(() => setError(t('تعذر حذف المحطة.', 'Could not delete this entry.')));
     }
   };
 
   const addClub = () => {
     const newClub: ClubExperience = {
-      id: `club-${Date.now()}`,
-      clubNameAr: 'نادي جديد',
-      clubNameEn: 'New Club',
-      countryAr: 'تركيا',
-      countryEn: 'Türkiye',
-      levelAr: 'الدوري المحترفين',
-      levelEn: 'Professional League',
-      durationAr: 'سنة واحدة',
-      durationEn: 'One Year',
+      id: `draft-${Date.now()}`,
+      clubNameAr: '',
+      clubNameEn: '',
+      countryAr: '',
+      countryEn: '',
+      levelAr: '',
+      levelEn: '',
+      durationAr: '',
+      durationEn: '',
       logoUrl: '',
       coverImageUrl: '',
       galleryUrls: [],
@@ -61,6 +67,26 @@ export const AdminCareer: React.FC = () => {
     const updated = { ...editingClub, [field]: value };
     setEditingClub(updated);
     saveAll(clubs.map(c => c.id === updated.id ? updated : c));
+  };
+
+  const saveCurrentEdit = async () => {
+    if (!editingClub?.clubNameAr.trim() || !editingClub.clubNameEn.trim()) {
+      setError(t('أدخل اسم النادي بالعربية والإنجليزية.', 'Enter the club name in Arabic and English.'));
+      return;
+    }
+    setSaving(true); setError('');
+    try {
+      const isNew = !editingClub.careerEntryId;
+      const response = await fetch(isNew ? '/api/career' : `/api/career/${editingClub.careerEntryId}`, {
+        method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editingClub),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Save failed');
+      saveAll(clubs.map(item => item.id === editingClub.id ? result as ClubExperience : item));
+      setEditingClub(result as ClubExperience);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : t('تعذر الحفظ.', 'Save failed.'));
+    } finally { setSaving(false); }
   };
 
   return (
@@ -79,6 +105,7 @@ export const AdminCareer: React.FC = () => {
           <span>{t('إضافة نادي جديد', 'ADD NEW CLUB')}</span>
         </button>
       </div>
+      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
 
       {/* List of Clubs */}
       <div className="space-y-6">
@@ -98,7 +125,7 @@ export const AdminCareer: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-cyan-400 font-latin">0{index + 1}</span>
-                    <span className="text-[10px] text-slate-500 font-latin">· {club.durationEn}</span>
+                    {club.durationEn && <span className="text-[10px] text-slate-500 font-latin">· {club.durationEn}</span>}
                   </div>
                   <h3 className="text-base font-extrabold text-white">
                     {club.clubNameEn} ({club.clubNameAr})
@@ -207,6 +234,12 @@ export const AdminCareer: React.FC = () => {
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-latin"
                     />
                   </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button onClick={() => void saveCurrentEdit()} disabled={saving} className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs disabled:opacity-50">
+                    <Save className="w-4 h-4 inline mr-2" />{saving ? t('جارٍ الحفظ…', 'Saving…') : t('حفظ', 'Save')}
+                  </button>
                 </div>
 
               </div>

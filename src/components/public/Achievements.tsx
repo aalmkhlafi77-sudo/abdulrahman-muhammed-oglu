@@ -1,11 +1,11 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { Trophy, Medal, Star, BarChart2, Award } from 'lucide-react';
 
 export const Achievements: React.FC = () => {
   const { t } = useLanguage();
-  const achievements = DataService.getAchievements();
+const { achievements } = useStructuredContent();
 
   const getBadgeIcon = (type?: string) => {
     switch (type) {

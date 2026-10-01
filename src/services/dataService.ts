@@ -21,10 +21,6 @@ import {
   initialPlayerInfo, 
   initialLanguages, 
   initialAttributes, 
-  initialClubs, 
-  initialAchievements, 
-  initialStats, 
-  initialVideos, 
   initialPhotos, 
   initialMedia, 
   initialCV, 
@@ -40,10 +36,6 @@ const STORAGE_KEYS = {
   HERO_CONFIG: 'abdurahman_hero_config_v1',
   LANGUAGES: 'abdurahman_languages_v1',
   ATTRIBUTES: 'abdurahman_attributes_v1',
-  CLUBS: 'abdurahman_clubs_v1',
-  ACHIEVEMENTS: 'abdurahman_achievements_v1',
-  STATS: 'abdurahman_stats_v1',
-  VIDEOS: 'abdurahman_videos_v1',
   PHOTOS: 'abdurahman_photos_v1',
   MEDIA: 'abdurahman_media_v1',
   CV: 'abdurahman_cv_v1',
@@ -60,6 +52,7 @@ const STORE_NAME = 'portfolio_store';
 
 // Synchronous Memory Cache for instant render
 const memoryCache: Record<string, any> = {};
+const mysqlCollections = { clubs: [] as ClubExperience[], achievements: [] as Achievement[], stats: [] as PerformanceStat[], videos: [] as VideoHighlight[] };
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -360,28 +353,29 @@ export const DataService = {
 
   // Clubs / Career Timeline
   getClubs: (): ClubExperience[] => {
-    const clubs = getStoredData<ClubExperience[]>(STORAGE_KEYS.CLUBS, initialClubs);
+    const clubs = mysqlCollections.clubs;
     return clubs.sort((a, b) => a.sortOrder - b.sortOrder);
   },
-  updateClubs: (data: ClubExperience[]): void => setStoredData(STORAGE_KEYS.CLUBS, data),
+  updateClubs: (data: ClubExperience[]): void => { mysqlCollections.clubs = data; },
 
   // Achievements
   getAchievements: (): Achievement[] => {
-    const achievements = getStoredData<Achievement[]>(STORAGE_KEYS.ACHIEVEMENTS, initialAchievements);
+    const achievements = mysqlCollections.achievements;
     return achievements.sort((a, b) => a.priority - b.priority);
   },
-  updateAchievements: (data: Achievement[]): void => setStoredData(STORAGE_KEYS.ACHIEVEMENTS, data),
+  updateAchievements: (data: Achievement[]): void => { mysqlCollections.achievements = data; },
 
   // Stats
-  getStats: (): PerformanceStat[] => getStoredData<PerformanceStat[]>(STORAGE_KEYS.STATS, initialStats),
-  updateStats: (data: PerformanceStat[]): void => setStoredData(STORAGE_KEYS.STATS, data),
+  getStats: (): PerformanceStat[] => mysqlCollections.stats,
+  updateStats: (data: PerformanceStat[]): void => { mysqlCollections.stats = data; },
 
   // Videos
   getVideos: (): VideoHighlight[] => {
-    const videos = getStoredData<VideoHighlight[]>(STORAGE_KEYS.VIDEOS, initialVideos);
+    const videos = mysqlCollections.videos;
     return videos.sort((a, b) => a.sortOrder - b.sortOrder);
   },
-  updateVideos: (data: VideoHighlight[]): void => setStoredData(STORAGE_KEYS.VIDEOS, data),
+  updateVideos: (data: VideoHighlight[]): void => { mysqlCollections.videos = data; },
+  setMysqlCollections: (data: Partial<typeof mysqlCollections>): void => { Object.assign(mysqlCollections, data); },
 
   // Photos
   getPhotos: (): PhotoItem[] => {
@@ -467,10 +461,6 @@ export const DataService = {
       brandingConfig: DataService.getBrandingConfig(),
       languages: DataService.getLanguages(),
       attributes: DataService.getAttributes(),
-      clubs: DataService.getClubs(),
-      achievements: DataService.getAchievements(),
-      stats: DataService.getStats(),
-      videos: DataService.getVideos(),
       photos: DataService.getPhotos(),
       media: DataService.getMedia(),
       cv: DataService.getCV(),
@@ -490,10 +480,6 @@ export const DataService = {
       if (data.brandingConfig) DataService.updateBrandingConfig(data.brandingConfig);
       if (data.languages) DataService.updateLanguages(data.languages);
       if (data.attributes) DataService.updateAttributes(data.attributes);
-      if (data.clubs) DataService.updateClubs(data.clubs);
-      if (data.achievements) DataService.updateAchievements(data.achievements);
-      if (data.stats) DataService.updateStats(data.stats);
-      if (data.videos) DataService.updateVideos(data.videos);
       if (data.photos) DataService.updatePhotos(data.photos);
       if (data.media) DataService.updateMedia(data.media);
       if (data.cv) DataService.updateCV(data.cv);
@@ -515,10 +501,6 @@ export const DataService = {
       if (serverData.brandingConfig) setStoredDataNoTrigger(STORAGE_KEYS.BRANDING_CONFIG, serverData.brandingConfig);
       if (serverData.languages) setStoredDataNoTrigger(STORAGE_KEYS.LANGUAGES, serverData.languages);
       if (serverData.attributes) setStoredDataNoTrigger(STORAGE_KEYS.ATTRIBUTES, serverData.attributes);
-      if (serverData.clubs) setStoredDataNoTrigger(STORAGE_KEYS.CLUBS, serverData.clubs);
-      if (serverData.achievements) setStoredDataNoTrigger(STORAGE_KEYS.ACHIEVEMENTS, serverData.achievements);
-      if (serverData.stats) setStoredDataNoTrigger(STORAGE_KEYS.STATS, serverData.stats);
-      if (serverData.videos) setStoredDataNoTrigger(STORAGE_KEYS.VIDEOS, serverData.videos);
       if (serverData.photos) setStoredDataNoTrigger(STORAGE_KEYS.PHOTOS, serverData.photos);
       if (serverData.media) setStoredDataNoTrigger(STORAGE_KEYS.MEDIA, serverData.media);
       if (serverData.cv) setStoredDataNoTrigger(STORAGE_KEYS.CV, serverData.cv);

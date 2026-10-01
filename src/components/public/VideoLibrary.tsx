@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { VideoHighlight, VideoCategory } from '../../types/player';
 import { Film, Play, Clock, Filter, Tag, CheckCircle } from 'lucide-react';
 
@@ -10,8 +10,8 @@ interface VideoLibraryProps {
 
 export const VideoLibrary: React.FC<VideoLibraryProps> = ({ onPlayVideo }) => {
   const { t } = useLanguage();
-  const videos = DataService.getVideos().filter(v => v.published);
-  const clubs = DataService.getClubs();
+  const { videos: allVideos, clubs } = useStructuredContent();
+  const videos = allVideos.filter(v => v.published);
 
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [selectedClub, setSelectedClub] = useState<string>('ALL');

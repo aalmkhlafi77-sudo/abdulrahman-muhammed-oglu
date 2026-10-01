@@ -92,6 +92,8 @@ export interface PersonalAttribute {
 
 export interface ClubExperience {
   id: string;
+  clubId?: string;
+  careerEntryId?: string;
   clubNameAr: string;
   clubNameEn: string;
   countryAr: string;
@@ -124,6 +126,7 @@ export interface Achievement {
   clubNameEn?: string;
   season?: string;
   priority: number;
+  sortOrder?: number;
   featured: boolean;
   badgeType?: 'trophy' | 'medal' | 'star' | 'chart';
 }

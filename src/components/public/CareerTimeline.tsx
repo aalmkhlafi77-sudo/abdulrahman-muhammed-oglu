@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { Briefcase, Trophy, Calendar, MapPin, ChevronRight, Star, Award, Image, Video } from 'lucide-react';
 
 export const CareerTimeline: React.FC = () => {
   const { t, lang } = useLanguage();
-  const clubs = DataService.getClubs();
+const { career: clubs } = useStructuredContent();
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
 
   return (
@@ -29,7 +29,7 @@ export const CareerTimeline: React.FC = () => {
         {/* Timeline Grid */}
         <div className="space-y-6 relative before:absolute before:inset-0 before:left-4 sm:before:left-1/2 before:-translate-x-1/2 before:w-0.5 before:bg-slate-800">
           
-          {clubs.map((club, index) => {
+          {clubs.filter(club => club.clubNameAr || club.clubNameEn).map((club, index) => {
             const isEven = index % 2 === 0;
             const hasAchievements = (club.achievementsAr && club.achievementsAr.length > 0) || (club.achievementsEn && club.achievementsEn.length > 0);
 

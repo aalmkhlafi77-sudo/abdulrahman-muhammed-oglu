@@ -21,6 +21,8 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminPlayerProfile } from './components/admin/AdminPlayerProfile';
 import { AdminCareer } from './components/admin/AdminCareer';
+import { AdminAchievements } from './components/admin/AdminAchievements';
+import { AdminStats } from './components/admin/AdminStats';
 import { AdminVideos } from './components/admin/AdminVideos';
 import { AdminMediaLibrary } from './components/admin/AdminMediaLibrary';
 import { AdminMediaInterviews } from './components/admin/AdminMediaInterviews';
@@ -33,6 +35,7 @@ import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding'
 import { VideoHighlight } from './types/player';
 import { DataService } from './services/dataService';
 import { PlayerInfoProvider } from './context/PlayerInfoContext';
+import { StructuredContentProvider } from './context/StructuredContentContext';
 
 export default function App() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
@@ -60,7 +63,8 @@ export default function App() {
       case 'dashboard': return <AdminDashboard />;
       case 'profile': return <AdminPlayerProfile />;
       case 'career': return <AdminCareer />;
-      case 'achievements': return <AdminCareer />;
+      case 'achievements': return <AdminAchievements />;
+      case 'stats': return <AdminStats />;
       case 'videos': return <AdminVideos />;
       case 'photos': return <AdminMediaLibrary />;
       case 'media': return <AdminMediaInterviews />;
@@ -76,6 +80,7 @@ export default function App() {
   return (
     <LanguageProvider>
       <PlayerInfoProvider>
+      <StructuredContentProvider>
       <div className="min-h-screen bg-[#0b0f17] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
         
         {/* Public Header Navbar */}
@@ -140,6 +145,7 @@ export default function App() {
         )}
 
       </div>
+      </StructuredContentProvider>
       </PlayerInfoProvider>
     </LanguageProvider>
   );

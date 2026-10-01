@@ -1,13 +1,15 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, calculateAge } from '../../services/dataService';
+import { calculateAge } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { ShieldAlert, Award, Star, CheckCircle, ExternalLink, Mail, Phone, ArrowUpRight } from 'lucide-react';
 
 export const ScoutingCard: React.FC = () => {
   const { t } = useLanguage();
   const { player } = usePlayerInfo();
-  const achievements = DataService.getAchievements().filter(a => a.featured);
+  const { achievements: allAchievements } = useStructuredContent();
+  const achievements = allAchievements.filter(a => a.featured);
   const age = calculateAge(player.dob);
 
   return (

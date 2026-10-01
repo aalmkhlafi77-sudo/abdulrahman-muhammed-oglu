@@ -1,42 +1,41 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, parseDriveUrl } from '../../services/dataService';
+import { parseDriveUrl } from '../../services/dataService';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { VideoHighlight, VideoCategory } from '../../types/player';
 import { ImagePicker } from './ImagePicker';
 import { Plus, Trash2, Edit, Star, Video, Check, Link } from 'lucide-react';
 
 export const AdminVideos: React.FC = () => {
   const { t } = useLanguage();
-  const [videos, setVideos] = useState<VideoHighlight[]>(DataService.getVideos());
+  const { videos, setVideos } = useStructuredContent();
   const [editingVideo, setEditingVideo] = useState<VideoHighlight | null>(null);
-
-  const saveAll = (updated: VideoHighlight[]) => {
-    setVideos(updated);
-    DataService.updateVideos(updated);
-  };
+  const [error, setError] = useState('');
 
   const deleteVideo = (id: string) => {
     if (window.confirm(t('حذف هذا الفيديو من المكتبة؟', 'Delete video from library?'))) {
-      const filtered = videos.filter(v => v.id !== id);
-      saveAll(filtered);
+      void fetch(`/api/videos/${id}`, { method: 'DELETE' }).then(response => {
+        if (!response.ok) throw new Error('Delete failed');
+        setVideos(current => current.filter(v => v.id !== id));
+      }).catch(() => setError(t('تعذر حذف الفيديو.', 'Could not delete video.')));
     }
   };
 
   const addVideo = () => {
     const newVid: VideoHighlight = {
-      id: `vid-${Date.now()}`,
-      titleAr: 'مقطع فيديو جديد',
-      titleEn: 'New Video Clip',
+      id: `draft-${Date.now()}`,
+      titleAr: '',
+      titleEn: '',
       category: 'HIGHLIGHTS',
-      duration: '02:00',
+      duration: '',
       videoSourceType: 'external',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop',
+      videoUrl: '',
+      thumbnailUrl: '',
       featured: false,
-      published: true,
+      published: false,
       sortOrder: videos.length + 1
     };
-    saveAll([newVid, ...videos]);
+    setVideos(current => [newVid, ...current]);
     setEditingVideo(newVid);
   };
 
@@ -55,7 +54,19 @@ export const AdminVideos: React.FC = () => {
     }
 
     setEditingVideo(updated);
-    saveAll(videos.map(v => v.id === updated.id ? updated : v));
+    setVideos(current => current.map(v => v.id === updated.id ? updated : v));
+  };
+
+  const saveVideo = async () => {
+    if (!editingVideo?.titleAr.trim() || !editingVideo.titleEn.trim() || !editingVideo.videoUrl.trim()) {
+      setError(t('أدخل العنوانين ورابط الفيديو.', 'Enter both titles and a video URL.'));
+      return;
+    }
+    const isNew = editingVideo.id.startsWith('draft-');
+    const response = await fetch(isNew ? '/api/videos' : `/api/videos/${editingVideo.id}`, { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editingVideo) });
+    const result = await response.json();
+    if (!response.ok) { setError(result.error || 'Save failed'); return; }
+    setVideos(current => current.map(item => item.id === editingVideo.id ? result : item)); setEditingVideo(result); setError('');
   };
 
   return (
@@ -74,6 +85,7 @@ export const AdminVideos: React.FC = () => {
           <span>{t('إضافة فيديو جديد', 'ADD NEW VIDEO')}</span>
         </button>
       </div>
+      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {videos.map((vid) => (
@@ -137,6 +149,11 @@ export const AdminVideos: React.FC = () => {
                 </div>
 
                 <div>
+                  <label className="block text-slate-400 font-semibold mb-1">{t('العنوان بالعربية', 'Title (Arabic)')}</label>
+                  <input type="text" value={editingVideo.titleAr} onChange={e => updateCurrentEdit('titleAr', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-100" />
+                </div>
+
+                <div>
                   <label className="block text-slate-400 font-semibold mb-1">{t('رابط الفيديو (Google Drive / YouTube / MP4)', 'Video URL')}</label>
                   <input 
                     type="text" 
@@ -185,6 +202,11 @@ export const AdminVideos: React.FC = () => {
                   />
                   <label htmlFor={`featured-${vid.id}`} className="text-amber-400 font-bold">{t('تمييز كفيديو رسمي رئيسي (Featured)', 'Set as Primary Official Showcase')}</label>
                 </div>
+                <label className="flex items-center gap-2 text-slate-300">
+                  <input type="checkbox" checked={editingVideo.published} onChange={e => updateCurrentEdit('published', e.target.checked)} className="rounded bg-slate-950 border-slate-800" />
+                  {t('نشر الفيديو للعامة', 'Publish video publicly')}
+                </label>
+                <button onClick={() => void saveVideo()} className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 text-xs font-bold">{t('حفظ الفيديو', 'Save video')}</button>
               </div>
             )}
 
