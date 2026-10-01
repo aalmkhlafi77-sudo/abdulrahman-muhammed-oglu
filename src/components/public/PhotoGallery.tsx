@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { usePhotos } from '../../context/PhotoContext';
 import { PhotoItem } from '../../types/player';
 import { Image, Maximize2, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const PhotoGallery: React.FC = () => {
   const { t, isRtl } = useLanguage();
-  const photos = DataService.getPhotos().filter(p => p.published);
+  const { photos: allPhotos } = usePhotos();
+  const photos = allPhotos.filter(p => p.published);
   
   const [selectedClub, setSelectedClub] = useState<string>('ALL');
   const [visibleCount, setVisibleCount] = useState<number>(12);
@@ -53,7 +54,7 @@ export const PhotoGallery: React.FC = () => {
             {t('معرض صور المباريات والتدريبات', 'Match & Training Gallery')}
           </h2>
           <p className="mt-3 text-sm text-slate-400">
-            {t('مجموعة من 58 صورة مقسمة حسب الأندية والمشاركات الرسمية', 'Curated collection of 58 action photos categorized across clubs')}
+            {t('الصور المنشورة والمعتمدة', 'Published match and training photos')}
           </p>
         </div>
 
@@ -67,7 +68,7 @@ export const PhotoGallery: React.FC = () => {
                 : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
             }`}
           >
-            {t('جميع الأندية (58 صورة)', 'All Clubs (58 Photos)')}
+            {t('جميع الأندية', 'All Clubs')} ({photos.length})
           </button>
 
           {clubNames.map((name) => (

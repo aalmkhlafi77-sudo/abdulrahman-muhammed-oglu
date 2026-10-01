@@ -36,6 +36,7 @@ import { VideoHighlight } from './types/player';
 import { DataService } from './services/dataService';
 import { PlayerInfoProvider } from './context/PlayerInfoContext';
 import { StructuredContentProvider } from './context/StructuredContentContext';
+import { PhotoProvider } from './context/PhotoContext';
 
 export default function App() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
@@ -81,6 +82,7 @@ export default function App() {
     <LanguageProvider>
       <PlayerInfoProvider>
       <StructuredContentProvider>
+      <PhotoProvider>
       <div className="min-h-screen bg-[#0b0f17] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
         
         {/* Public Header Navbar */}
@@ -145,6 +147,7 @@ export default function App() {
         )}
 
       </div>
+      </PhotoProvider>
       </StructuredContentProvider>
       </PlayerInfoProvider>
     </LanguageProvider>

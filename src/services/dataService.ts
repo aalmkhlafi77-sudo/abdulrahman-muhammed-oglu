@@ -21,7 +21,6 @@ import {
   initialPlayerInfo, 
   initialLanguages, 
   initialAttributes, 
-  initialPhotos, 
   initialMedia, 
   initialCV, 
   initialSections, 
@@ -36,7 +35,6 @@ const STORAGE_KEYS = {
   HERO_CONFIG: 'abdurahman_hero_config_v1',
   LANGUAGES: 'abdurahman_languages_v1',
   ATTRIBUTES: 'abdurahman_attributes_v1',
-  PHOTOS: 'abdurahman_photos_v1',
   MEDIA: 'abdurahman_media_v1',
   CV: 'abdurahman_cv_v1',
   SECTIONS: 'abdurahman_sections_v1',
@@ -53,6 +51,7 @@ const STORE_NAME = 'portfolio_store';
 // Synchronous Memory Cache for instant render
 const memoryCache: Record<string, any> = {};
 const mysqlCollections = { clubs: [] as ClubExperience[], achievements: [] as Achievement[], stats: [] as PerformanceStat[], videos: [] as VideoHighlight[] };
+let mysqlPhotos: PhotoItem[] = [];
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -379,10 +378,9 @@ export const DataService = {
 
   // Photos
   getPhotos: (): PhotoItem[] => {
-    const photos = getStoredData<PhotoItem[]>(STORAGE_KEYS.PHOTOS, initialPhotos);
-    return photos.sort((a, b) => a.sortOrder - b.sortOrder);
+    return mysqlPhotos.sort((a, b) => a.sortOrder - b.sortOrder);
   },
-  updatePhotos: (data: PhotoItem[]): void => setStoredData(STORAGE_KEYS.PHOTOS, data),
+  updatePhotos: (data: PhotoItem[]): void => { mysqlPhotos = data; },
 
   // Media & Interviews
   getMedia: (): MediaItem[] => getStoredData<MediaItem[]>(STORAGE_KEYS.MEDIA, initialMedia),
@@ -461,7 +459,6 @@ export const DataService = {
       brandingConfig: DataService.getBrandingConfig(),
       languages: DataService.getLanguages(),
       attributes: DataService.getAttributes(),
-      photos: DataService.getPhotos(),
       media: DataService.getMedia(),
       cv: DataService.getCV(),
       sections: DataService.getSections(),
@@ -480,7 +477,6 @@ export const DataService = {
       if (data.brandingConfig) DataService.updateBrandingConfig(data.brandingConfig);
       if (data.languages) DataService.updateLanguages(data.languages);
       if (data.attributes) DataService.updateAttributes(data.attributes);
-      if (data.photos) DataService.updatePhotos(data.photos);
       if (data.media) DataService.updateMedia(data.media);
       if (data.cv) DataService.updateCV(data.cv);
       if (data.sections) DataService.updateSections(data.sections);
@@ -501,7 +497,6 @@ export const DataService = {
       if (serverData.brandingConfig) setStoredDataNoTrigger(STORAGE_KEYS.BRANDING_CONFIG, serverData.brandingConfig);
       if (serverData.languages) setStoredDataNoTrigger(STORAGE_KEYS.LANGUAGES, serverData.languages);
       if (serverData.attributes) setStoredDataNoTrigger(STORAGE_KEYS.ATTRIBUTES, serverData.attributes);
-      if (serverData.photos) setStoredDataNoTrigger(STORAGE_KEYS.PHOTOS, serverData.photos);
       if (serverData.media) setStoredDataNoTrigger(STORAGE_KEYS.MEDIA, serverData.media);
       if (serverData.cv) setStoredDataNoTrigger(STORAGE_KEYS.CV, serverData.cv);
       if (serverData.sections) setStoredDataNoTrigger(STORAGE_KEYS.SECTIONS, serverData.sections);

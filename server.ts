@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import authRouter from './server/routes/auth';
 import playerRouter from './server/routes/player';
 import { careerRoutes, clubRoutes } from './server/routes/coreContent';
+import imageRoutes from './server/routes/images';
+import { getUploadConfig, storedImageName } from './server/config/uploads';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +19,19 @@ app.use('/api/auth', authRouter);
 app.use('/api/player', playerRouter);
 app.use('/api', clubRoutes);
 app.use('/api/career', careerRoutes);
+app.use('/api', imageRoutes);
+
+const uploadConfig = getUploadConfig();
+if (uploadConfig) {
+  app.get(`${uploadConfig.mountPath}/:filename`, (req, res) => {
+    const filename = req.params.filename;
+    if (!storedImageName(filename)) { res.status(404).send(); return; }
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(path.join(uploadConfig.root, filename), (error) => {
+      if (error && !res.headersSent) res.status(404).send();
+    });
+  });
+}
 
 // File-backed persistence storage directory
 const DATA_DIR = path.join(__dirname, 'data_store');

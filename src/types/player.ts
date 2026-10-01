@@ -178,11 +178,12 @@ export interface VideoHighlight {
 
 export interface PhotoItem {
   id: string;
+  assetId?: string;
   fileName?: string;
   originalFileName?: string;
   titleAr?: string;
   titleEn?: string;
-  imageUrl: string; // Resolves to base64, external URL, or Drive Stream URL
+  imageUrl: string;
   clubId?: string;
   clubNameAr?: string;
   clubNameEn?: string;

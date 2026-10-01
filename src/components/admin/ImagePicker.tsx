@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, parseDriveUrl, compressImage } from '../../services/dataService';
+import { usePhotos } from '../../context/PhotoContext';
+import { createPhoto, deleteAsset, uploadImage } from '../../services/photoApi';
 import { PhotoItem } from '../../types/player';
 import { 
   Upload, 
@@ -62,7 +63,9 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   const [urlError, setUrlError] = useState(false);
 
   // Library Tab
-  const [libraryPhotos, setLibraryPhotos] = useState<PhotoItem[]>([]);
+  const { photos: libraryPhotos, refreshPhotos } = usePhotos();
+  const [uploadError, setUploadError] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClub, setSelectedClub] = useState('ALL');
 
@@ -71,7 +74,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setLibraryPhotos(DataService.getPhotos());
+    if (activeTab === 'library') void refreshPhotos().catch(() => setUploadError(t('تعذر تحميل الصور.', 'Could not load photos.')));
   }, [activeTab]);
 
   // Read dimensions of selected / uploaded image dynamically
@@ -82,7 +85,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
         resolve({ width: img.naturalWidth, height: img.naturalHeight });
       };
       img.onerror = () => {
-        resolve({ width: 800, height: 800 });
+        resolve({ width: 0, height: 0 });
       };
       img.src = url;
     });
@@ -92,29 +95,27 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const rawDataUrl = event.target?.result as string;
-      
-      // Compress immediately to prevent quota limits (Requirement #15 & #16)
-      const dataUrl = await compressImage(rawDataUrl);
-      
-      setPreviewUrl(dataUrl);
-      const dims = await fetchImageDimensions(dataUrl);
-
-      onSelect({
-        imageUrl: dataUrl,
-        fileName: file.name,
-        originalFileName: file.name,
-        fileSize: file.size,
-        mimeType: file.type,
-        width: dims.width,
-        height: dims.height,
-        focalPoint: focalPoint
-      });
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    setUploadError('');
+    try {
+      const asset = await uploadImage(file);
+      try {
+        await createPhoto({ assetId: asset.id, titleAr: '', titleEn: '', published: false, sortOrder: 0 });
+      } catch (error) {
+        await deleteAsset(asset.id).catch(() => {});
+        throw error;
+      }
+      await refreshPhotos();
+      setPreviewUrl(asset.imageUrl);
+      const dims = await fetchImageDimensions(asset.imageUrl);
+      onSelect({ imageUrl: asset.imageUrl, fileName: asset.fileName, fileSize: asset.fileSize,
+        mimeType: asset.mimeType, width: dims.width, height: dims.height, focalPoint });
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : t('فشل رفع الصورة.', 'Image upload failed.'));
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   // 2. URL Handler
@@ -122,13 +123,8 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
     e.preventDefault();
     if (!urlInput) return;
 
-    let resolvedUrl = urlInput;
-    if (urlInput.includes('drive.google.com')) {
-      resolvedUrl = parseDriveUrl(urlInput).directUrl;
-    }
-
-    // Basic URL validation
-    if (!resolvedUrl.startsWith('http://') && !resolvedUrl.startsWith('https://') && !resolvedUrl.startsWith('data:image')) {
+    const resolvedUrl = urlInput.trim();
+    if (!/^https?:\/\//i.test(resolvedUrl) || resolvedUrl.includes('drive.google.com')) {
       setUrlError(true);
       return;
     }
@@ -139,8 +135,6 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 
     onSelect({
       imageUrl: resolvedUrl,
-      fileName: 'url_imported_asset.jpg',
-      originalFileName: 'url_imported_asset.jpg',
       width: dims.width,
       height: dims.height,
       focalPoint: focalPoint
@@ -153,8 +147,8 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
     setFocalPoint(photo.focalPoint || { x: 50, y: 50 });
     onSelect({
       imageUrl: photo.imageUrl,
-      fileName: photo.fileName || 'library_asset.jpg',
-      originalFileName: photo.originalFileName || 'library_asset.jpg',
+      fileName: photo.fileName,
+      originalFileName: photo.originalFileName,
       focalPoint: photo.focalPoint || { x: 50, y: 50 },
       width: photo.width,
       height: photo.height
@@ -164,6 +158,10 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   // Focal Point Handler
   const handleFocalPointClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!previewContainerRef.current) return;
+    if (previewUrl.startsWith('data:')) {
+      setUploadError(t('ارفع الصورة كملف أولًا.', 'Upload this image as a file first.'));
+      return;
+    }
     const rect = previewContainerRef.current.getBoundingClientRect();
     const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
@@ -244,15 +242,17 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
           >
             <Upload className="w-8 h-8 text-slate-500 group-hover:text-cyan-400 mx-auto mb-2 transition-colors" />
             <p className="text-xs font-bold text-slate-300">{t('اسحب وألقِ الصورة هنا أو انقر للتصفح', 'Drag & drop image here, or click to browse')}</p>
-            <p className="text-[10px] text-slate-500 mt-1 font-latin">Supports JPG, PNG, WebP, AVIF up to 10MB</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-latin">JPG, JPEG, PNG, WebP · 12MB max</p>
             <input 
               type="file" 
               ref={fileInputRef}
               onChange={handleFileUpload}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
             />
           </div>
+          {uploading && <p className="text-xs text-cyan-400">{t('جارٍ رفع الصورة…', 'Uploading image…')}</p>}
+          {uploadError && <p role="alert" className="text-xs text-red-400">{uploadError}</p>}
         </div>
       )}
 
@@ -263,7 +263,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
               type="text" 
               value={urlInput}
               onChange={e => setUrlInput(e.target.value)}
-              placeholder="https://images.unsplash.com/photo-..."
+              placeholder="https://example.com/photo.jpg"
               className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 font-latin"
             />
             <button
