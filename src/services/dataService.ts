@@ -51,8 +51,6 @@ const STORAGE_KEYS = {
   THEME: 'abdurahman_theme_v1',
   SEO: 'abdurahman_seo_v1',
   INQUIRIES: 'abdurahman_inquiries_v1',
-  ADMIN_AUTH: 'abdurahman_admin_auth_v1',
-  ADMIN_PASS_HASH: 'abdurahman_admin_pass_hash_v1',
   BRANDING_CONFIG: 'abdurahman_branding_config_v1'
 };
 
@@ -441,64 +439,6 @@ export const DataService = {
   getBrandingConfig: (): BrandingConfig => getStoredData<BrandingConfig>(STORAGE_KEYS.BRANDING_CONFIG, initialBrandingConfig),
   updateBrandingConfig: (data: BrandingConfig): void => setStoredData(STORAGE_KEYS.BRANDING_CONFIG, data),
 
-  // Secure Cryptographic Password Hashing & Authenticating
-  getAdminPasswordHash: async (): Promise<string> => {
-    let hash = await readFromIDB(STORAGE_KEYS.ADMIN_PASS_HASH);
-    if (!hash) {
-      const raw = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS_HASH);
-      if (raw) {
-        try {
-          hash = JSON.parse(raw);
-        } catch (e) {
-          hash = raw;
-        }
-      }
-    }
-    if (!hash) {
-      // Default "scout2024" SHA-256 hash
-      hash = '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4';
-      setStoredData(STORAGE_KEYS.ADMIN_PASS_HASH, hash);
-    }
-    return hash;
-  },
-
-  verifyAdminPassword: async (password: string): Promise<boolean> => {
-    if (!password) return false;
-    const clean = password.trim();
-    if (!clean) return false;
-
-    const storedHash = await DataService.getAdminPasswordHash();
-    const hashedInput = await hashPassword(clean);
-
-    // 1. Direct hash match
-    if (hashedInput === storedHash) return true;
-
-    // 2. Direct plaintext match (if saved as plaintext in legacy or config)
-    if (clean === storedHash) return true;
-
-    // 3. Known default password hashes & plain text defaults
-    const defaultPasswords = ['scout2024', 'admin', '1234', '2003', 'admin123', 'pass1234'];
-    const defaultHashes = [
-      '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4', // scout2024
-      '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // admin
-      '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', // 1234
-      'a7c93809637c7ee07722709199fa69b2229a43a0e4420a320c29ed6d36e2f17d'  // 2003
-    ];
-
-    const isDefaultStored = defaultHashes.includes(storedHash) || !storedHash;
-    if (isDefaultStored && defaultPasswords.includes(clean.toLowerCase())) {
-      return true;
-    }
-
-    return false;
-  },
-
-  updateAdminPassword: async (newPassword: string): Promise<void> => {
-    const clean = newPassword.trim();
-    const hashed = await hashPassword(clean);
-    setStoredData(STORAGE_KEYS.ADMIN_PASS_HASH, hashed);
-  },
-
   // Manual Reset to original defaults only when requested by Admin
   resetAll: async (): Promise<void> => {
     Object.values(STORAGE_KEYS).forEach((k) => {
@@ -610,25 +550,4 @@ export const DataService = {
       return false;
     }
   }
-};
-
-/**
- * Hash password asynchronously using SHA-256 (for admin security compliance)
- */
-export const hashPassword = async (password: string): Promise<string> => {
-  if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-    // Basic local fallback if crypto subtle is not present
-    let hash = 0;
-    for (let i = 0; i < password.length; i++) {
-      const char = password.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash |= 0;
-    }
-    return hash.toString(16);
-  }
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };

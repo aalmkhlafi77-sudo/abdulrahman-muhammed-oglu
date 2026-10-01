@@ -34,14 +34,21 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children }) => {
   const { t } = useLanguage();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem('admin_authenticated') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [email, setEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  React.useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(response => setIsAuthenticated(response.ok))
+      .catch(() => setIsAuthenticated(false))
+      .finally(() => setAuthChecking(false));
+  }, []);
 
   React.useEffect(() => {
     (window as any).adminNavigateToTab = (tab: string) => {
@@ -58,22 +65,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isValid = await DataService.verifyAdminPassword(passcode);
-    const isDefaultHash = (await DataService.getAdminPasswordHash()) === '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4';
-    const isFallbackPass = isDefaultHash && ['scout2024', 'admin', '1234', '2003'].includes(passcode);
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: passcode }),
+    });
 
-    if (isValid || isFallbackPass) {
+    if (response.ok) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
       setAuthError(false);
     } else {
       setAuthError(true);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setIsAuthenticated(false);
-    sessionStorage.removeItem('admin_authenticated');
   };
 
   const handleExportJSON = () => {
@@ -125,6 +134,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
 
   const currentItem = menuItems.find(m => m.key === activeTab) || menuItems[0];
 
+  if (authChecking) {
+    return <div className="fixed inset-0 z-50 bg-[#0b0f17]" />;
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="fixed inset-0 z-50 bg-[#0b0f17] flex items-center justify-center p-4">
@@ -141,12 +154,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">{t('رمز المرور (PIN)', 'Passcode')}</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">{t('البريد الإلكتروني', 'Email')}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="username"
+                placeholder={t('البريد الإلكتروني للمدير', 'Admin email')}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-latin"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">{t('كلمة المرور', 'Password')}</label>
               <input 
                 type="password" 
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
-                placeholder={t('أدخل رمز المرور (الافتراضي: scout2024)', 'Enter passcode (Default: scout2024)')}
+                autoComplete="current-password"
+                placeholder={t('أدخل كلمة المرور', 'Enter password')}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-latin text-center tracking-widest"
               />
             </div>
@@ -154,7 +179,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
             {authError && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{t('رمز المرور غير صحيح. جرب scout2024', 'Incorrect passcode. Try: scout2024')}</span>
+                <span>{t('بيانات الدخول غير صحيحة', 'Invalid email or password')}</span>
               </div>
             )}
 

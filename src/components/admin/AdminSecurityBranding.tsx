@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, hashPassword } from '../../services/dataService';
+import { DataService } from '../../services/dataService';
 import { BrandingConfig } from '../../types/player';
 import { MediaPicker } from '../common/MediaPicker';
 import { 
@@ -75,27 +75,28 @@ export const AdminSecurityBranding: React.FC = () => {
     const cleanNew = newPassword.trim();
     const cleanConfirm = confirmPassword.trim();
 
-    // 1. Check if current password is correct
-    const isCurrentCorrect = await DataService.verifyAdminPassword(cleanCurrent);
-    if (!isCurrentCorrect) {
-      setPasswordError(t('كلمة المرور الحالية غير صحيحة', 'Current password is incorrect'));
+    if (cleanNew.length < 12) {
+      setPasswordError(t('يجب أن تكون كلمة المرور الجديدة 12 حرفاً على الأقل', 'New password must be at least 12 characters'));
       return;
     }
 
-    // 2. Minimum validation
-    if (cleanNew.length < 8) {
-      setPasswordError(t('يجب أن تكون كلمة المرور الجديدة 8 أحرف على الأقل', 'New password must be at least 8 characters'));
-      return;
-    }
-
-    // 3. Confirm password matches
     if (cleanNew !== cleanConfirm) {
       setPasswordError(t('كلمتا المرور غير متطابقتين', 'Passwords do not match'));
       return;
     }
 
-    // 4. Update secure hash
-    await DataService.updateAdminPassword(cleanNew);
+    const response = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: cleanCurrent, newPassword: cleanNew }),
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => null) as { error?: string } | null;
+      setPasswordError(result?.error || t('تعذر تحديث كلمة المرور', 'Unable to update password'));
+      return;
+    }
+
     setPasswordErrorSuccess(true);
     setCurrentPassword('');
     setNewPassword('');
@@ -104,7 +105,6 @@ export const AdminSecurityBranding: React.FC = () => {
     if (logoutSessions) {
       // Clear authenticate session and force logout
       setTimeout(() => {
-        sessionStorage.removeItem('admin_authenticated');
         window.location.reload();
       }, 2000);
     }
