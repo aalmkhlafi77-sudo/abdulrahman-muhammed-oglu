@@ -23,7 +23,8 @@ import {
   Download,
   Upload,
   RotateCcw,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -46,14 +47,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
     (window as any).adminNavigateToTab = (tab: string) => {
       setActiveTab(tab);
     };
+    (window as any).adminClosePortal = () => {
+      onCloseAdmin();
+    };
     return () => {
       delete (window as any).adminNavigateToTab;
+      delete (window as any).adminClosePortal;
     };
-  }, []);
+  }, [onCloseAdmin]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === 'scout2024' || passcode === 'admin' || passcode === '1234' || passcode === '2003') {
+    const isValid = await DataService.verifyAdminPassword(passcode);
+    const isDefaultHash = (await DataService.getAdminPasswordHash()) === '4c6806e5792ec0656a4252bd3cbfe52cfb9bbd0a793c1df7e132ad8d37446bc4';
+    const isFallbackPass = isDefaultHash && ['scout2024', 'admin', '1234', '2003'].includes(passcode);
+
+    if (isValid || isFallbackPass) {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin_authenticated', 'true');
       setAuthError(false);
@@ -111,6 +120,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
     { key: 'sections', labelAr: 'ترتيب أقسام الصفحة', labelEn: 'Sections Manager', icon: <Layers className="w-4 h-4" /> },
     { key: 'theme', labelAr: 'المظهر والألوان', labelEn: 'Appearance & Colors', icon: <Palette className="w-4 h-4" /> },
     { key: 'seo', labelAr: 'إعدادات SEO والروابط', labelEn: 'SEO Settings', icon: <Globe className="w-4 h-4" /> },
+    { key: 'security_branding', labelAr: 'الأمان وشعار الموقع', labelEn: 'Security & Branding', icon: <Settings className="w-4 h-4" /> },
   ];
 
   const currentItem = menuItems.find(m => m.key === activeTab) || menuItems[0];

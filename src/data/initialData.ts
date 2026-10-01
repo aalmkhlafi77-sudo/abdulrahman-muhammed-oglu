@@ -13,7 +13,8 @@ import {
   ThemeConfig, 
   SEOConfig,
   ImageDisplayConfig,
-  HeroConfig
+  HeroConfig,
+  BrandingConfig
 } from '../types/player';
 
 export const initialPlayerInfo: PlayerInfo = {
@@ -526,4 +527,20 @@ export const initialHeroConfig: HeroConfig = {
   contentMaxWidth: 'wide',
   textAlign: 'center',
   mobileContentAlign: 'center'
+};
+
+export const initialBrandingConfig: BrandingConfig = {
+  logoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=200&auto=format&fit=crop',
+  logoFit: 'contain',
+  desktopLogoWidth: 120,
+  tabletLogoWidth: 100,
+  mobileLogoWidth: 80,
+  logoAlignment: 'center',
+  showInHeader: true,
+  showInFooter: true,
+  showInAdminLogin: true,
+  showInAdminSidebar: true,
+  showInFavicon: false,
+  showInSocialShare: false,
+  logoStatus: 'default'
 };

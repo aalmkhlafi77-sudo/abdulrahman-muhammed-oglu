@@ -22,8 +22,17 @@ import {
   RefreshCw,
   FolderOpen,
   Upload,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
+
+const urlsMatch = (url1?: string, url2?: string): boolean => {
+  if (!url1 || !url2) return false;
+  if (url1 === url2) return true;
+  const clean1 = url1.split('?')[0].split('#')[0].trim().toLowerCase();
+  const clean2 = url2.split('?')[0].split('#')[0].trim().toLowerCase();
+  return clean1 === clean2;
+};
 
 export const AdminMediaLibrary: React.FC = () => {
   const { t } = useLanguage();
@@ -87,21 +96,27 @@ export const AdminMediaLibrary: React.FC = () => {
     const player = DataService.getPlayerInfo();
     const clubs = DataService.getClubs();
     const seo = DataService.getSEO();
+    const heroConfig = DataService.getHeroConfig();
     
     const references: string[] = [];
 
-    if (player.profilePhoto === photo.imageUrl) references.push('Player Profile Photo');
-    if (player.heroImage === photo.imageUrl) references.push('Hero Desktop Background');
-    if (player.mobileHeroImage === photo.imageUrl) references.push('Hero Mobile Background');
-    if (player.playerCutoutImage === photo.imageUrl) references.push('Player Profile Cutout');
-    if (player.aboutImage === photo.imageUrl) references.push('About Player Section');
-    if (player.cvPreviewImage === photo.imageUrl) references.push('CV Preview Background');
-    if (player.socialShareImage === photo.imageUrl) references.push('Social Share Banner');
-    if (seo.ogImageUrl === photo.imageUrl) references.push('SEO OpenGraph Banner');
+    if (urlsMatch(player.profilePhoto, photo.imageUrl)) references.push('Player Profile Photo');
+    if (urlsMatch(player.heroImage, photo.imageUrl)) references.push('Hero Desktop Background');
+    if (urlsMatch(player.mobileHeroImage, photo.imageUrl)) references.push('Hero Mobile Background');
+    if (urlsMatch(player.playerCutoutImage, photo.imageUrl)) references.push('Player Profile Cutout');
+    if (urlsMatch(player.aboutImage, photo.imageUrl)) references.push('About Player Section');
+    if (urlsMatch(player.cvPreviewImage, photo.imageUrl)) references.push('CV Preview Background');
+    if (urlsMatch(player.socialShareImage, photo.imageUrl)) references.push('Social Share Banner');
+    if (urlsMatch(seo.ogImageUrl, photo.imageUrl)) references.push('SEO OpenGraph Banner');
+    if (urlsMatch(heroConfig.desktopImage, photo.imageUrl)) references.push('Hero Customizer Desktop Image');
+    if (urlsMatch(heroConfig.mobileImage, photo.imageUrl)) references.push('Hero Customizer Mobile Image');
+    if (heroConfig.imageDisplay && urlsMatch(heroConfig.imageDisplay.mobileImage, photo.imageUrl)) {
+      references.push('Hero Display Mobile Overrides');
+    }
 
     clubs.forEach(c => {
-      if (c.logoUrl === photo.imageUrl) references.push(`Logo of Club: ${c.clubNameEn}`);
-      if (c.coverImageUrl === photo.imageUrl) references.push(`Cover of Club: ${c.clubNameEn}`);
+      if (urlsMatch(c.logoUrl, photo.imageUrl)) references.push(`Logo of Club: ${c.clubNameEn}`);
+      if (urlsMatch(c.coverImageUrl, photo.imageUrl)) references.push(`Cover of Club: ${c.clubNameEn}`);
     });
 
     // Always trigger custom warning dialog modal to prevent browser blocking errors!
@@ -125,13 +140,13 @@ export const AdminMediaLibrary: React.FC = () => {
     let playerUpdated = false;
     const fallbackImage = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop';
     
-    if (player.profilePhoto === oldUrl) { player.profilePhoto = fallbackImage; playerUpdated = true; }
-    if (player.heroImage === oldUrl) { player.heroImage = fallbackImage; playerUpdated = true; }
-    if (player.mobileHeroImage === oldUrl) { player.mobileHeroImage = fallbackImage; playerUpdated = true; }
-    if (player.playerCutoutImage === oldUrl) { player.playerCutoutImage = ''; playerUpdated = true; }
-    if (player.aboutImage === oldUrl) { player.aboutImage = ''; playerUpdated = true; }
-    if (player.cvPreviewImage === oldUrl) { player.cvPreviewImage = ''; playerUpdated = true; }
-    if (player.socialShareImage === oldUrl) { player.socialShareImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.profilePhoto, oldUrl)) { player.profilePhoto = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.heroImage, oldUrl)) { player.heroImage = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.mobileHeroImage, oldUrl)) { player.mobileHeroImage = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.playerCutoutImage, oldUrl)) { player.playerCutoutImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.aboutImage, oldUrl)) { player.aboutImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.cvPreviewImage, oldUrl)) { player.cvPreviewImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.socialShareImage, oldUrl)) { player.socialShareImage = ''; playerUpdated = true; }
     if (playerUpdated) {
       DataService.updatePlayerInfo(player);
     }
@@ -143,8 +158,8 @@ export const AdminMediaLibrary: React.FC = () => {
       let changed = false;
       let logo = c.logoUrl;
       let cover = c.coverImageUrl;
-      if (c.logoUrl === oldUrl) { logo = ''; changed = true; }
-      if (c.coverImageUrl === oldUrl) { cover = ''; changed = true; }
+      if (urlsMatch(c.logoUrl, oldUrl)) { logo = ''; changed = true; }
+      if (urlsMatch(c.coverImageUrl, oldUrl)) { cover = ''; changed = true; }
       if (changed) {
         clubsUpdated = true;
         return { ...c, logoUrl: logo, coverImageUrl: cover };
@@ -157,9 +172,22 @@ export const AdminMediaLibrary: React.FC = () => {
 
     // 4. Safely unlink/clear active references in SEO OG Image
     const seo = DataService.getSEO();
-    if (seo.ogImageUrl === oldUrl) {
+    if (urlsMatch(seo.ogImageUrl, oldUrl)) {
       seo.ogImageUrl = fallbackImage;
       DataService.updateSEO(seo);
+    }
+
+    // 5. Safely unlink/clear active references in HeroConfig
+    const heroConfig = DataService.getHeroConfig();
+    let heroUpdated = false;
+    if (urlsMatch(heroConfig.desktopImage, oldUrl)) { heroConfig.desktopImage = fallbackImage; heroUpdated = true; }
+    if (urlsMatch(heroConfig.mobileImage, oldUrl)) { heroConfig.mobileImage = fallbackImage; heroUpdated = true; }
+    if (heroConfig.imageDisplay && urlsMatch(heroConfig.imageDisplay.mobileImage, oldUrl)) {
+      heroConfig.imageDisplay.mobileImage = '';
+      heroUpdated = true;
+    }
+    if (heroUpdated) {
+      DataService.updateHeroConfig(heroConfig);
     }
 
     setDeletionWarning({ show: false, photo: null, references: [] });
@@ -211,13 +239,13 @@ export const AdminMediaLibrary: React.FC = () => {
       // 2. Scan and replace references in Player Profile (Requirement #5)
       const player = DataService.getPlayerInfo();
       let playerUpdated = false;
-      if (player.profilePhoto === oldUrl) { player.profilePhoto = dataUrl; playerUpdated = true; }
-      if (player.heroImage === oldUrl) { player.heroImage = dataUrl; playerUpdated = true; }
-      if (player.mobileHeroImage === oldUrl) { player.mobileHeroImage = dataUrl; playerUpdated = true; }
-      if (player.playerCutoutImage === oldUrl) { player.playerCutoutImage = dataUrl; playerUpdated = true; }
-      if (player.aboutImage === oldUrl) { player.aboutImage = dataUrl; playerUpdated = true; }
-      if (player.cvPreviewImage === oldUrl) { player.cvPreviewImage = dataUrl; playerUpdated = true; }
-      if (player.socialShareImage === oldUrl) { player.socialShareImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.profilePhoto, oldUrl)) { player.profilePhoto = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.heroImage, oldUrl)) { player.heroImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.mobileHeroImage, oldUrl)) { player.mobileHeroImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.playerCutoutImage, oldUrl)) { player.playerCutoutImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.aboutImage, oldUrl)) { player.aboutImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.cvPreviewImage, oldUrl)) { player.cvPreviewImage = dataUrl; playerUpdated = true; }
+      if (urlsMatch(player.socialShareImage, oldUrl)) { player.socialShareImage = dataUrl; playerUpdated = true; }
       if (playerUpdated) {
         DataService.updatePlayerInfo(player);
       }
@@ -229,8 +257,8 @@ export const AdminMediaLibrary: React.FC = () => {
         let changed = false;
         let logo = c.logoUrl;
         let cover = c.coverImageUrl;
-        if (c.logoUrl === oldUrl) { logo = dataUrl; changed = true; }
-        if (c.coverImageUrl === oldUrl) { cover = dataUrl; changed = true; }
+        if (urlsMatch(c.logoUrl, oldUrl)) { logo = dataUrl; changed = true; }
+        if (urlsMatch(c.coverImageUrl, oldUrl)) { cover = dataUrl; changed = true; }
         if (changed) {
           clubsUpdated = true;
           return { ...c, logoUrl: logo, coverImageUrl: cover };
@@ -243,9 +271,22 @@ export const AdminMediaLibrary: React.FC = () => {
 
       // 4. Scan and replace references in SEO
       const seo = DataService.getSEO();
-      if (seo.ogImageUrl === oldUrl) {
+      if (urlsMatch(seo.ogImageUrl, oldUrl)) {
         seo.ogImageUrl = dataUrl;
         DataService.updateSEO(seo);
+      }
+
+      // 5. Scan and replace references in HeroConfig
+      const heroConfig = DataService.getHeroConfig();
+      let heroUpdated = false;
+      if (urlsMatch(heroConfig.desktopImage, oldUrl)) { heroConfig.desktopImage = dataUrl; heroUpdated = true; }
+      if (urlsMatch(heroConfig.mobileImage, oldUrl)) { heroConfig.mobileImage = dataUrl; heroUpdated = true; }
+      if (heroConfig.imageDisplay && urlsMatch(heroConfig.imageDisplay.mobileImage, oldUrl)) {
+        heroConfig.imageDisplay.mobileImage = dataUrl;
+        heroUpdated = true;
+      }
+      if (heroUpdated) {
+        DataService.updateHeroConfig(heroConfig);
       }
 
       setReplaceTargetId(null);
@@ -397,13 +438,13 @@ export const AdminMediaLibrary: React.FC = () => {
     // 1. Update Player Info references
     const player = DataService.getPlayerInfo();
     let playerUpdated = false;
-    if (player.profilePhoto === oldUrl) { player.profilePhoto = newUrl; playerUpdated = true; }
-    if (player.heroImage === oldUrl) { player.heroImage = newUrl; playerUpdated = true; }
-    if (player.mobileHeroImage === oldUrl) { player.mobileHeroImage = newUrl; playerUpdated = true; }
-    if (player.playerCutoutImage === oldUrl) { player.playerCutoutImage = newUrl; playerUpdated = true; }
-    if (player.aboutImage === oldUrl) { player.aboutImage = newUrl; playerUpdated = true; }
-    if (player.cvPreviewImage === oldUrl) { player.cvPreviewImage = newUrl; playerUpdated = true; }
-    if (player.socialShareImage === oldUrl) { player.socialShareImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.profilePhoto, oldUrl)) { player.profilePhoto = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.heroImage, oldUrl)) { player.heroImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.mobileHeroImage, oldUrl)) { player.mobileHeroImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.playerCutoutImage, oldUrl)) { player.playerCutoutImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.aboutImage, oldUrl)) { player.aboutImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.cvPreviewImage, oldUrl)) { player.cvPreviewImage = newUrl; playerUpdated = true; }
+    if (urlsMatch(player.socialShareImage, oldUrl)) { player.socialShareImage = newUrl; playerUpdated = true; }
     if (playerUpdated) DataService.updatePlayerInfo(player);
 
     // 2. Update Club Experience references
@@ -414,10 +455,10 @@ export const AdminMediaLibrary: React.FC = () => {
       let logo = c.logoUrl;
       let cover = c.coverImageUrl;
       let gallery = c.galleryUrls || [];
-      if (c.logoUrl === oldUrl) { logo = newUrl; changed = true; }
-      if (c.coverImageUrl === oldUrl) { cover = newUrl; changed = true; }
-      if (gallery.includes(oldUrl)) {
-        gallery = gallery.map(url => url === oldUrl ? newUrl : url);
+      if (urlsMatch(c.logoUrl, oldUrl)) { logo = newUrl; changed = true; }
+      if (urlsMatch(c.coverImageUrl, oldUrl)) { cover = newUrl; changed = true; }
+      if (gallery.some(url => urlsMatch(url, oldUrl))) {
+        gallery = gallery.map(url => urlsMatch(url, oldUrl) ? newUrl : url);
         changed = true;
       }
       if (changed) {
@@ -430,9 +471,22 @@ export const AdminMediaLibrary: React.FC = () => {
 
     // 3. Update SEO references
     const seo = DataService.getSEO();
-    if (seo.ogImageUrl === oldUrl) {
+    if (urlsMatch(seo.ogImageUrl, oldUrl)) {
       seo.ogImageUrl = newUrl;
       DataService.updateSEO(seo);
+    }
+
+    // 4. Update HeroConfig references
+    const heroConfig = DataService.getHeroConfig();
+    let heroUpdated = false;
+    if (urlsMatch(heroConfig.desktopImage, oldUrl)) { heroConfig.desktopImage = newUrl; heroUpdated = true; }
+    if (urlsMatch(heroConfig.mobileImage, oldUrl)) { heroConfig.mobileImage = newUrl; heroUpdated = true; }
+    if (heroConfig.imageDisplay && urlsMatch(heroConfig.imageDisplay.mobileImage, oldUrl)) {
+      heroConfig.imageDisplay.mobileImage = newUrl;
+      heroUpdated = true;
+    }
+    if (heroUpdated) {
+      DataService.updateHeroConfig(heroConfig);
     }
 
     // Now delete oldUrl photo from media list safely
@@ -454,13 +508,13 @@ export const AdminMediaLibrary: React.FC = () => {
     // 1. Player Info references
     const player = DataService.getPlayerInfo();
     let playerUpdated = false;
-    if (player.profilePhoto === oldUrl) { player.profilePhoto = fallbackImage; playerUpdated = true; }
-    if (player.heroImage === oldUrl) { player.heroImage = fallbackImage; playerUpdated = true; }
-    if (player.mobileHeroImage === oldUrl) { player.mobileHeroImage = fallbackImage; playerUpdated = true; }
-    if (player.playerCutoutImage === oldUrl) { player.playerCutoutImage = ''; playerUpdated = true; }
-    if (player.aboutImage === oldUrl) { player.aboutImage = ''; playerUpdated = true; }
-    if (player.cvPreviewImage === oldUrl) { player.cvPreviewImage = ''; playerUpdated = true; }
-    if (player.socialShareImage === oldUrl) { player.socialShareImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.profilePhoto, oldUrl)) { player.profilePhoto = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.heroImage, oldUrl)) { player.heroImage = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.mobileHeroImage, oldUrl)) { player.mobileHeroImage = fallbackImage; playerUpdated = true; }
+    if (urlsMatch(player.playerCutoutImage, oldUrl)) { player.playerCutoutImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.aboutImage, oldUrl)) { player.aboutImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.cvPreviewImage, oldUrl)) { player.cvPreviewImage = ''; playerUpdated = true; }
+    if (urlsMatch(player.socialShareImage, oldUrl)) { player.socialShareImage = ''; playerUpdated = true; }
     if (playerUpdated) DataService.updatePlayerInfo(player);
 
     // 2. Club Experience references
@@ -471,10 +525,10 @@ export const AdminMediaLibrary: React.FC = () => {
       let logo = c.logoUrl;
       let cover = c.coverImageUrl;
       let gallery = c.galleryUrls || [];
-      if (c.logoUrl === oldUrl) { logo = ''; changed = true; }
-      if (c.coverImageUrl === oldUrl) { cover = ''; changed = true; }
-      if (gallery.includes(oldUrl)) {
-        gallery = gallery.filter(url => url !== oldUrl);
+      if (urlsMatch(c.logoUrl, oldUrl)) { logo = ''; changed = true; }
+      if (urlsMatch(c.coverImageUrl, oldUrl)) { cover = ''; changed = true; }
+      if (gallery.some(url => urlsMatch(url, oldUrl))) {
+        gallery = gallery.filter(url => !urlsMatch(url, oldUrl));
         changed = true;
       }
       if (changed) {
@@ -487,9 +541,22 @@ export const AdminMediaLibrary: React.FC = () => {
 
     // 3. SEO references
     const seo = DataService.getSEO();
-    if (seo.ogImageUrl === oldUrl) {
+    if (urlsMatch(seo.ogImageUrl, oldUrl)) {
       seo.ogImageUrl = fallbackImage;
       DataService.updateSEO(seo);
+    }
+
+    // 4. HeroConfig references
+    const heroConfig = DataService.getHeroConfig();
+    let heroUpdated = false;
+    if (urlsMatch(heroConfig.desktopImage, oldUrl)) { heroConfig.desktopImage = fallbackImage; heroUpdated = true; }
+    if (urlsMatch(heroConfig.mobileImage, oldUrl)) { heroConfig.mobileImage = fallbackImage; heroUpdated = true; }
+    if (heroConfig.imageDisplay && urlsMatch(heroConfig.imageDisplay.mobileImage, oldUrl)) {
+      heroConfig.imageDisplay.mobileImage = '';
+      heroUpdated = true;
+    }
+    if (heroUpdated) {
+      DataService.updateHeroConfig(heroConfig);
     }
 
     // Now delete oldUrl photo from media list safely
@@ -519,6 +586,38 @@ export const AdminMediaLibrary: React.FC = () => {
 
   return (
     <div className="space-y-8">
+
+      {/* Navigation Breadcrumb Bar */}
+      <div className="flex items-center justify-between bg-slate-900/60 p-3 px-4 rounded-xl border border-slate-800 text-xs">
+        <div className="flex items-center gap-2 text-slate-400">
+          <button 
+            type="button"
+            onClick={() => {
+              if ((window as any).adminNavigateToTab) {
+                (window as any).adminNavigateToTab('dashboard');
+              }
+            }}
+            className="hover:text-cyan-400 font-bold transition-colors"
+          >
+            {t('لوحة التحكم', 'Dashboard')}
+          </button>
+          <span>/</span>
+          <span className="text-white font-bold">{t('مكتبة الوسائط والصور', 'Media & Photo Library')}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if ((window as any).adminClosePortal) {
+              (window as any).adminClosePortal();
+            }
+          }}
+          className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 hover:border-red-500/30 text-slate-300 font-bold flex items-center gap-1.5 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{t('خروج وإغلاق', 'Exit Admin')}</span>
+        </button>
+      </div>
       
       {/* Hidden File Input for Replacement Trigger */}
       <input 

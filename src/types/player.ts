@@ -359,3 +359,22 @@ export interface HeroConfig {
   textAlign: 'left' | 'center' | 'right';
   mobileContentAlign: 'left' | 'center' | 'right';
 }
+
+export interface BrandingConfig {
+  logoUrl: string;
+  mobileLogoUrl?: string;
+  lightLogoUrl?: string;
+  darkLogoUrl?: string;
+  logoFit: 'contain' | 'cover' | 'original';
+  desktopLogoWidth: number;
+  tabletLogoWidth: number;
+  mobileLogoWidth: number;
+  logoAlignment: 'left' | 'center' | 'right';
+  showInHeader: boolean;
+  showInFooter: boolean;
+  showInAdminLogin: boolean;
+  showInAdminSidebar: boolean;
+  showInFavicon: boolean;
+  showInSocialShare: boolean;
+  logoStatus: 'default' | 'custom' | 'removed';
+}

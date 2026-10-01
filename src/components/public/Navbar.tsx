@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Play, Globe, Menu, X, Shield, Download } from 'lucide-react';
+import { Play, Globe, Menu, X, Settings, Download } from 'lucide-react';
 import { DataService } from '../../services/dataService';
 
 interface NavbarProps {
@@ -44,11 +44,42 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
         {/* Zone 1: Wordmark / Brand Title */}
         <a 
           href="#" 
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group animate-fadeIn"
         >
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform font-latin tracking-wider">
-            AMO
-          </div>
+          {(() => {
+            const branding = DataService.getBrandingConfig();
+            const showLogo = branding.showInHeader && branding.logoUrl && branding.logoStatus !== 'removed';
+            const logoSrc = branding.logoUrl;
+            
+            if (showLogo) {
+              return (
+                <div className={`flex items-center ${
+                  branding.logoAlignment === 'center' ? 'justify-center' :
+                  branding.logoAlignment === 'right' ? 'justify-end' : 'justify-start'
+                }`}>
+                  <picture className="block">
+                    {branding.mobileLogoUrl && (
+                      <source media="(max-width: 640px)" srcSet={branding.mobileLogoUrl} />
+                    )}
+                    <img 
+                      src={logoSrc} 
+                      alt="Brand Logo" 
+                      style={{
+                        objectFit: branding.logoFit === 'original' ? 'none' : branding.logoFit,
+                        maxWidth: `${branding.desktopLogoWidth}px`
+                      }}
+                      className="max-h-12 w-auto transition-all duration-300"
+                    />
+                  </picture>
+                </div>
+              );
+            }
+            return (
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform font-latin tracking-wider">
+                AMO
+              </div>
+            );
+          })()}
           <div className="flex flex-col">
             <span className="text-base sm:text-lg font-bold text-white tracking-wide leading-tight group-hover:text-cyan-400 transition-colors">
               {t(player.nameAr, player.nameEn)}
@@ -93,13 +124,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
             <span>{t('الفيديو الرسمي', 'Official Highlights')}</span>
           </button>
 
-          {/* Admin Login Portal Icon */}
           <button
             onClick={onOpenAdmin}
             className="p-2 rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-cyan-400 hover:border-slate-700 transition-colors"
             title={t('لوحة الإدارة', 'Admin Portal')}
           >
-            <Shield className="w-4 h-4" />
+            <Settings className="w-4 h-4 hover:spin-slow" />
           </button>
 
           {/* Mobile Hamburger Toggle */}

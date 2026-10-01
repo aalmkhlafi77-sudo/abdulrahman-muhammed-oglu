@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService } from '../../services/dataService';
-import { Shield } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 interface FooterProps {
   onOpenAdmin: () => void;
@@ -48,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             className="p-1.5 rounded bg-slate-900 border border-slate-800 hover:text-cyan-400 transition-colors"
             title={t('لوحة الإدارة', 'Admin Panel')}
           >
-            <Shield className="w-3.5 h-3.5" />
+            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
 

@@ -28,6 +28,7 @@ import { AdminInquiries } from './components/admin/AdminInquiries';
 import { AdminSections } from './components/admin/AdminSections';
 import { AdminTheme } from './components/admin/AdminTheme';
 import { AdminSEO } from './components/admin/AdminSEO';
+import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding';
 
 import { VideoHighlight } from './types/player';
 import { DataService } from './services/dataService';
@@ -57,6 +58,7 @@ export default function App() {
       case 'sections': return <AdminSections />;
       case 'theme': return <AdminTheme />;
       case 'seo': return <AdminSEO />;
+      case 'security_branding': return <AdminSecurityBranding />;
       default: return <AdminDashboard />;
     }
   };

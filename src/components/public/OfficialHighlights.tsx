@@ -34,37 +34,44 @@ export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVi
         </div>
 
         {/* Wide Cinematic Banner */}
-        <div className="relative rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 group">
+        <div className="relative rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 group flex flex-col">
           
-          {/* Thumbnail Image with Gradient Scrim */}
-          <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden">
+          {/* Thumbnail Image Container */}
+          <div className="relative aspect-video sm:aspect-[21/9] w-full overflow-hidden bg-slate-950">
             <img 
               src={officialVideo.thumbnailUrl} 
               alt={officialVideo.titleEn}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f17] via-[#0b0f17]/50 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f17]/90 via-transparent to-[#0b0f17]/60" />
+            {/* Scrim gradients on desktop */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f17]/90 via-[#0b0f17]/30 to-transparent hidden sm:block" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f17]/90 via-transparent to-[#0b0f17]/60 hidden sm:block" />
+            <div className="absolute inset-0 bg-slate-950/20 sm:hidden block" />
+
+            {/* Category Tag (Mobile: Top Left, Desktop: in overlay info) */}
+            <div className="absolute top-3 left-3 sm:hidden px-2.5 py-1 rounded-md bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[10px] font-extrabold uppercase font-latin z-10">
+              {officialVideo.category}
+            </div>
 
             {/* Duration Tag */}
-            <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-slate-800 text-cyan-400 text-xs font-bold font-latin flex items-center gap-1.5 shadow-lg">
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[11px] sm:text-xs font-bold font-latin flex items-center gap-1.5 shadow-lg z-10">
               <Clock className="w-3.5 h-3.5" />
               <span>{officialVideo.duration || '04:32'}</span>
             </div>
 
             {/* Play Button Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <button
                 onClick={() => onPlayVideo(officialVideo)}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/40 hover:scale-110 transition-all duration-300 group-hover:shadow-cyan-400/60"
+                className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/40 hover:scale-110 transition-all duration-300 group-hover:shadow-cyan-400/60 cursor-pointer"
                 aria-label="Play Official Video"
               >
-                <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-slate-950 translate-x-0.5" />
+                <Play className="w-7 h-7 sm:w-10 sm:h-10 fill-slate-950 translate-x-0.5" />
               </button>
             </div>
 
-            {/* Bottom Overlay Info */}
-            <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            {/* Bottom Overlay Info (Desktop Only) */}
+            <div className="hidden sm:flex absolute bottom-6 left-6 right-6 flex-row items-end justify-between gap-4 z-10">
               <div className="max-w-2xl">
                 <span className="px-3 py-1 rounded-md bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-2 inline-block font-latin">
                   {officialVideo.category}
@@ -81,13 +88,38 @@ export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVi
 
               <button
                 onClick={() => onPlayVideo(officialVideo)}
-                className="self-start sm:self-end px-5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-cyan-400 font-bold text-xs hover:border-cyan-400 transition-colors shrink-0 flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-cyan-400 font-bold text-xs hover:border-cyan-400 hover:bg-cyan-500 hover:text-slate-950 transition-all shrink-0 flex items-center gap-2 cursor-pointer shadow-lg"
               >
                 <Film className="w-4 h-4" />
                 <span>{t('تشغيل ملخص المباريات', 'LAUNCH REEL')}</span>
               </button>
             </div>
 
+          </div>
+
+          {/* Mobile Info Body Below Thumbnail (Clean layout matching other video container) */}
+          <div className="sm:hidden p-5 bg-slate-900 flex flex-col justify-between space-y-3.5 border-t border-slate-800/80">
+            <div>
+              <h3 className="text-base font-extrabold text-cyan-400 leading-snug mb-2">
+                {t(officialVideo.titleAr, officialVideo.titleEn)}
+              </h3>
+              {officialVideo.descriptionAr && (
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {t(officialVideo.descriptionAr, officialVideo.descriptionEn || '')}
+                </p>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <button
+                onClick={() => onPlayVideo(officialVideo)}
+                className="text-cyan-400 font-bold hover:underline flex items-center gap-1.5 text-xs py-1"
+              >
+                <Film className="w-3.5 h-3.5" />
+                <span>{t('مشاهدة الفيديو', 'Watch Video')}</span>
+              </button>
+              <span className="text-[10px] text-slate-500 uppercase font-latin font-bold">{officialVideo.videoSourceType || 'DRIVE'}</span>
+            </div>
           </div>
 
         </div>
