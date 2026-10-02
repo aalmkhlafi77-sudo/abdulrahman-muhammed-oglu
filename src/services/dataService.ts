@@ -1,17 +1,13 @@
 import type {
-  BrandingConfig,
   ContactInquiry,
   DocumentCV,
-  HeroConfig,
   MediaItem,
   SEOConfig,
   SectionConfig,
   ThemeConfig,
 } from '../types/player';
 import {
-  initialBrandingConfig,
   initialCV,
-  initialHeroConfig,
   initialMedia,
   initialSections,
   initialSEO,
@@ -19,14 +15,12 @@ import {
 } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  HERO_CONFIG: 'abdurahman_hero_config_v1',
   MEDIA: 'abdurahman_media_v1',
   CV: 'abdurahman_cv_v1',
   SECTIONS: 'abdurahman_sections_v1',
   THEME: 'abdurahman_theme_v1',
   SEO: 'abdurahman_seo_v1',
   INQUIRIES: 'abdurahman_inquiries_v1',
-  BRANDING_CONFIG: 'abdurahman_branding_config_v1',
 } as const;
 
 const memoryCache: Record<string, unknown> = {};
@@ -116,9 +110,6 @@ export const parseYoutubeUrl = (url: string): string => {
 };
 
 export const DataService = {
-  getHeroConfig: (): HeroConfig => getStoredData(STORAGE_KEYS.HERO_CONFIG, initialHeroConfig),
-  updateHeroConfig: (data: HeroConfig): void => setStoredData(STORAGE_KEYS.HERO_CONFIG, data),
-
   getMedia: (): MediaItem[] => getStoredData(STORAGE_KEYS.MEDIA, initialMedia),
   updateMedia: (data: MediaItem[]): void => setStoredData(STORAGE_KEYS.MEDIA, data),
 
@@ -153,6 +144,4 @@ export const DataService = {
     setStoredData(STORAGE_KEYS.INQUIRIES, DataService.getInquiries().filter(item => item.id !== id));
   },
 
-  getBrandingConfig: (): BrandingConfig => getStoredData(STORAGE_KEYS.BRANDING_CONFIG, initialBrandingConfig),
-  updateBrandingConfig: (data: BrandingConfig): void => setStoredData(STORAGE_KEYS.BRANDING_CONFIG, data),
 };

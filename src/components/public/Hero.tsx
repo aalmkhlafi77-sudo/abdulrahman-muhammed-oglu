@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, calculateAge, parseYoutubeUrl } from '../../services/dataService';
+import { calculateAge, parseYoutubeUrl } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { Play, User, FileText, MapPin, Flag, ChevronDown } from 'lucide-react';
 
 interface HeroProps {
@@ -11,7 +12,7 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
   const { t } = useLanguage();
   const { player } = usePlayerInfo();
-  const heroConfig = DataService.getHeroConfig();
+  const { hero: heroConfig } = useSiteSettings();
   const age = calculateAge(player.dob);
 
   const imgDisp = heroConfig.imageDisplay || {
@@ -29,8 +30,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
     blur: 0
   };
 
-  const imageSrc = player.heroImage;
-  const mobileImgSrc = player.mobileHeroImage || '';
+  const imageSrc = heroConfig.desktopImage || player.heroImage || '';
+  const mobileImgSrc = heroConfig.mobileImage || player.mobileHeroImage || '';
 
   const focalX = imgDisp.focalPoint?.x ?? imgDisp.positionX ?? 50;
   const focalY = imgDisp.focalPoint?.y ?? imgDisp.positionY ?? 50;

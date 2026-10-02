@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Play, Globe, Menu, X, Settings, Download } from 'lucide-react';
-import { DataService } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 interface NavbarProps {
   onOpenAdmin: () => void;
@@ -14,6 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { player } = usePlayerInfo();
+  const { branding } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,14 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
           href="#" 
           className="flex items-center gap-3 group animate-fadeIn"
         >
-          {(() => {
-            const branding = DataService.getBrandingConfig();
-            const showLogo = branding.showInHeader && branding.logoUrl && branding.logoStatus !== 'removed';
-            const logoSrc = branding.logoUrl;
-            
-            if (showLogo) {
-              return (
-                <div className={`flex items-center ${
+          {branding.showInHeader && branding.logoUrl && branding.logoStatus !== 'removed' && (
+            <div className={`flex items-center ${
                   branding.logoAlignment === 'center' ? 'justify-center' :
                   branding.logoAlignment === 'right' ? 'justify-end' : 'justify-start'
                 }`}>
@@ -63,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
                       <source media="(max-width: 640px)" srcSet={branding.mobileLogoUrl} />
                     )}
                     <img 
-                      src={logoSrc} 
+                      src={branding.logoUrl}
                       alt="Brand Logo" 
                       referrerPolicy="no-referrer"
                       style={{
@@ -73,15 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
                       className="max-h-12 w-auto transition-all duration-300"
                     />
                   </picture>
-                </div>
-              );
-            }
-            return (
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-slate-950 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform font-latin tracking-wider">
-                AMO
-              </div>
-            );
-          })()}
+            </div>
+          )}
           <div className="flex flex-col">
             <span className="text-base sm:text-lg font-bold text-white tracking-wide leading-tight group-hover:text-cyan-400 transition-colors">
               {t(player.nameAr, player.nameEn)}

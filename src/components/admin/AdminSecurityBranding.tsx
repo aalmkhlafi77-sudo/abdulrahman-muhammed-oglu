@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { BrandingConfig } from '../../types/player';
 import { MediaPicker } from '../common/MediaPicker';
 import { 
@@ -25,6 +25,7 @@ import {
 
 export const AdminSecurityBranding: React.FC = () => {
   const { t } = useLanguage();
+  const { branding: sharedBranding, setBranding: setSharedBranding } = useSiteSettings();
 
   // Password States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -38,9 +39,12 @@ export const AdminSecurityBranding: React.FC = () => {
   const [logoutSessions, setLogoutSessions] = useState(true);
 
   // Branding States
-  const [branding, setBranding] = useState<BrandingConfig>(() => DataService.getBrandingConfig());
+  const [branding, setBranding] = useState<BrandingConfig>(sharedBranding);
   const [brandingSaved, setBrandingSaved] = useState(false);
+  const [brandingError, setBrandingError] = useState(false);
   const [activeLogoType, setActiveLogoType] = useState<'main' | 'mobile' | 'light' | 'dark' | null>(null);
+
+  useEffect(() => setBranding(sharedBranding), [sharedBranding]);
 
   // Password strength checker helper
   const getPasswordStrength = (pass: string): { strength: 'weak' | 'medium' | 'strong'; label: string; color: string } => {
@@ -110,11 +114,29 @@ export const AdminSecurityBranding: React.FC = () => {
     }
   };
 
-  const handleSaveBranding = (e: React.FormEvent) => {
+  const handleSaveBranding = async (e: React.FormEvent) => {
     e.preventDefault();
-    DataService.updateBrandingConfig(branding);
-    setBrandingSaved(true);
-    setTimeout(() => setBrandingSaved(false), 3000);
+    setBrandingError(false);
+    try {
+      const response = await fetch('/api/settings/branding', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(branding),
+      });
+      if (!response.ok) {
+        setBrandingError(true);
+        return;
+      }
+      const savedBranding = await response.json() as BrandingConfig;
+      setBranding(savedBranding);
+      setSharedBranding(savedBranding);
+      setBrandingSaved(true);
+      setTimeout(() => setBrandingSaved(false), 3000);
+    } catch (error) {
+      console.error('Could not save Branding settings:', error);
+      setBrandingError(true);
+    }
   };
 
   const removeLogo = (type: 'main' | 'mobile' | 'light' | 'dark') => {
@@ -300,6 +322,12 @@ export const AdminSecurityBranding: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-2 animate-fadeIn">
                 <Check className="w-4 h-4 shrink-0" />
                 <span>{t('تم حفظ إعدادات الشعار والهوية بنجاح!', 'Branding specifications and logos saved!')}</span>
+              </div>
+            )}
+            {brandingError && (
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{t('تعذر حفظ إعدادات الهوية', 'Could not save Branding settings')}</span>
               </div>
             )}
 

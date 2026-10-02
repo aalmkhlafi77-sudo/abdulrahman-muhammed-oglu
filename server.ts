@@ -4,6 +4,7 @@ import authRouter from './server/routes/auth';
 import playerRouter from './server/routes/player';
 import { careerRoutes, clubRoutes } from './server/routes/coreContent';
 import imageRoutes from './server/routes/images';
+import settingsRoutes from './server/routes/settings';
 import { db } from './server/config/database';
 import { getUploadConfig, storedImageName } from './server/config/uploads';
 
@@ -15,6 +16,7 @@ app.use('/api/player', playerRouter);
 app.use('/api', clubRoutes);
 app.use('/api/career', careerRoutes);
 app.use('/api', imageRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/api/health', async (_req, res) => {
   try {

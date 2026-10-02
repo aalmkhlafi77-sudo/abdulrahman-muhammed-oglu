@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { Settings } from 'lucide-react';
 
 interface FooterProps {
@@ -11,6 +11,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   const { t } = useLanguage();
   const { player } = usePlayerInfo();
+  const { branding } = useSiteSettings();
 
   return (
     <footer className="bg-[#070a0f] border-t border-slate-800/80 py-12 text-slate-400 text-xs">
@@ -18,9 +19,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
         
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center font-bold text-slate-950 font-latin text-xs">
-            AMO
-          </div>
+          {branding.showInFooter && branding.logoUrl && branding.logoStatus !== 'removed' && (
+            <img src={branding.logoUrl} alt="Brand Logo" className="max-h-8 w-auto" style={{ maxWidth: `${branding.desktopLogoWidth}px`, objectFit: branding.logoFit === 'original' ? 'none' : branding.logoFit }} />
+          )}
           <div>
             <span className="font-bold text-white block text-sm">
               {t(player.nameAr, player.nameEn)}

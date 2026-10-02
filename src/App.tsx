@@ -27,9 +27,6 @@ import { AdminVideos } from './components/admin/AdminVideos';
 import { AdminMediaLibrary } from './components/admin/AdminMediaLibrary';
 import { AdminMediaInterviews } from './components/admin/AdminMediaInterviews';
 import { AdminInquiries } from './components/admin/AdminInquiries';
-import { AdminSections } from './components/admin/AdminSections';
-import { AdminTheme } from './components/admin/AdminTheme';
-import { AdminSEO } from './components/admin/AdminSEO';
 import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding';
 
 import { VideoHighlight } from './types/player';
@@ -37,6 +34,7 @@ import { PlayerInfoProvider } from './context/PlayerInfoContext';
 import { StructuredContentProvider } from './context/StructuredContentContext';
 import { PhotoProvider } from './context/PhotoContext';
 import { useStructuredContent } from './context/StructuredContentContext';
+import { SiteSettingsProvider } from './context/SiteSettingsContext';
 
 function AppContent() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
@@ -61,9 +59,6 @@ function AppContent() {
       case 'photos': return <AdminMediaLibrary />;
       case 'media': return <AdminMediaInterviews />;
       case 'inquiries': return <AdminInquiries />;
-      case 'sections': return <AdminSections />;
-      case 'theme': return <AdminTheme />;
-      case 'seo': return <AdminSEO />;
       case 'security_branding': return <AdminSecurityBranding />;
       default: return <AdminDashboard />;
     }
@@ -141,11 +136,13 @@ export default function App() {
   return (
     <LanguageProvider>
       <PlayerInfoProvider>
-        <StructuredContentProvider>
-          <PhotoProvider>
-            <AppContent />
-          </PhotoProvider>
-        </StructuredContentProvider>
+        <SiteSettingsProvider>
+          <StructuredContentProvider>
+            <PhotoProvider>
+              <AppContent />
+            </PhotoProvider>
+          </StructuredContentProvider>
+        </SiteSettingsProvider>
       </PlayerInfoProvider>
     </LanguageProvider>
   );

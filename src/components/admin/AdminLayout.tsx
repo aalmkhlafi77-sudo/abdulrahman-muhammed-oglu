@@ -11,9 +11,6 @@ import {
   Radio, 
   FileText, 
   Mail, 
-  Layers, 
-  Palette, 
-  Globe, 
   LogOut, 
   Lock, 
   ArrowLeft,
@@ -91,9 +88,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
     { key: 'media', labelAr: 'المقابلات والإعلام', labelEn: 'Media & Interviews', icon: <Radio className="w-4 h-4" /> },
     { key: 'cv', labelAr: 'السيرة الذاتية (CV)', labelEn: 'Player CV', icon: <FileText className="w-4 h-4" /> },
     { key: 'inquiries', labelAr: 'رسائل الكشافين', labelEn: 'Scout Inquiries', icon: <Mail className="w-4 h-4" /> },
-    { key: 'sections', labelAr: 'ترتيب أقسام الصفحة', labelEn: 'Sections Manager', icon: <Layers className="w-4 h-4" /> },
-    { key: 'theme', labelAr: 'المظهر والألوان', labelEn: 'Appearance & Colors', icon: <Palette className="w-4 h-4" /> },
-    { key: 'seo', labelAr: 'إعدادات SEO والروابط', labelEn: 'SEO Settings', icon: <Globe className="w-4 h-4" /> },
     { key: 'security_branding', labelAr: 'الأمان وشعار الموقع', labelEn: 'Security & Branding', icon: <Settings className="w-4 h-4" /> },
   ];
 

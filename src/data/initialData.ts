@@ -506,8 +506,8 @@ export const defaultImageDisplayConfig: ImageDisplayConfig = {
 
 export const initialHeroConfig: HeroConfig = {
   displayMode: 'image_overlay',
-  desktopImage: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1600&auto=format&fit=crop',
-  mobileImage: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop',
+  desktopImage: '',
+  mobileImage: '',
   videoUrl: '',
   videoSourceType: 'youtube',
   imageDisplay: { ...defaultImageDisplayConfig, brightness: 90, contrast: 110 },
@@ -530,7 +530,7 @@ export const initialHeroConfig: HeroConfig = {
 };
 
 export const initialBrandingConfig: BrandingConfig = {
-  logoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=200&auto=format&fit=crop',
+  logoUrl: '',
   logoFit: 'contain',
   desktopLogoWidth: 120,
   tabletLogoWidth: 100,
@@ -542,5 +542,5 @@ export const initialBrandingConfig: BrandingConfig = {
   showInAdminSidebar: true,
   showInFavicon: false,
   showInSocialShare: false,
-  logoStatus: 'default'
+  logoStatus: 'removed'
 };

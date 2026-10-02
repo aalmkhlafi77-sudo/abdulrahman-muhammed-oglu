@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { PlayerInfo, HeroConfig } from '../../types/player';
 import { defaultImageDisplayConfig } from '../../data/initialData';
 import { MediaPicker } from '../common/MediaPicker';
@@ -12,12 +12,9 @@ import { Save, Check, FileImage, Layout, Sparkles, Sliders, Trash2 } from 'lucid
 export const AdminPlayerProfile: React.FC = () => {
   const { t } = useLanguage();
   const { player: sharedPlayer, setPlayer: setSharedPlayer } = usePlayerInfo();
+  const { hero: sharedHero, setHero: setSharedHero } = useSiteSettings();
   const [player, setPlayer] = useState<PlayerInfo>(sharedPlayer);
-  const [heroConfig, setHeroConfig] = useState<HeroConfig>(() => ({
-    ...DataService.getHeroConfig(),
-    desktopImage: sharedPlayer.heroImage || '',
-    mobileImage: sharedPlayer.mobileHeroImage || '',
-  }));
+  const [heroConfig, setHeroConfig] = useState<HeroConfig>(sharedHero);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'hero' | 'imageControls'>('profile');
@@ -25,17 +22,22 @@ export const AdminPlayerProfile: React.FC = () => {
   // Active Picker Modal states
   const [activePicker, setActivePicker] = useState<'profile' | 'hero' | 'mobileHero' | 'cutout' | null>(null);
 
+  useEffect(() => setHeroConfig(sharedHero), [sharedHero]);
+
   useEffect(() => {
     fetch('/api/player')
       .then(async response => response.ok ? await response.json() as PlayerInfo : null)
-      .then(value => {
+      .then(async value => {
         if (value) {
           setPlayer(value);
           setSharedPlayer(value);
+          const heroResponse = await fetch('/api/settings/hero');
+          const storedHero = heroResponse.ok ? await heroResponse.json() as Partial<HeroConfig> | null : null;
           setHeroConfig(current => ({
             ...current,
-            desktopImage: value.heroImage || '',
-            mobileImage: value.mobileHeroImage || '',
+            ...storedHero,
+            desktopImage: storedHero?.desktopImage ?? value.heroImage ?? '',
+            mobileImage: storedHero?.mobileImage ?? value.mobileHeroImage ?? '',
           }));
         }
       })
@@ -70,9 +72,21 @@ export const AdminPlayerProfile: React.FC = () => {
         return;
       }
       const savedPlayer = await response.json() as PlayerInfo;
+      const heroResponse = await fetch('/api/settings/hero', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(heroConfig),
+      });
+      if (!heroResponse.ok) {
+        setSaveError(true);
+        return;
+      }
+      const savedHero = await heroResponse.json() as HeroConfig;
       setPlayer(savedPlayer);
       setSharedPlayer(savedPlayer);
-      DataService.updateHeroConfig(heroConfig);
+      setHeroConfig(savedHero);
+      setSharedHero(savedHero);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
