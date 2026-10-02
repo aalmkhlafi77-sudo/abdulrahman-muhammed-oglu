@@ -2,6 +2,7 @@ import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { Settings } from 'lucide-react';
 
 interface FooterProps {
@@ -12,6 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   const { t } = useLanguage();
   const { player } = usePlayerInfo();
   const { branding } = useSiteSettings();
+  const { videos } = useStructuredContent();
+  const hasVideos = videos.some(video => video.published && Boolean(video.videoUrl?.trim()));
 
   return (
     <footer className="bg-[#070a0f] border-t border-slate-800/80 py-12 text-slate-400 text-xs">
@@ -27,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               {t(player.nameAr, player.nameEn)}
             </span>
             <span className="text-[11px] text-slate-500 font-latin">
-              {t('الملف الكشفي والمحفظة الرياضية الرسمية', 'Official Player Portfolio & Scouting Platform')}
+              {t('ملف اللاعب', 'Player Profile')}
             </span>
           </div>
         </div>
@@ -37,7 +40,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
           <a href="#scouting" className="hover:text-cyan-400 transition-colors">{t('التقييم', 'Scouting')}</a>
           <a href="#profile" className="hover:text-cyan-400 transition-colors">{t('الملف', 'Profile')}</a>
           <a href="#career" className="hover:text-cyan-400 transition-colors">{t('المسيرة', 'Career')}</a>
-          <a href="#highlights" className="hover:text-cyan-400 transition-colors">{t('الفيديوهات', 'Highlights')}</a>
+          {hasVideos && <a href="#highlights" className="hover:text-cyan-400 transition-colors">{t('الفيديوهات', 'Highlights')}</a>}
           <a href="#cv" className="hover:text-cyan-400 transition-colors">{t('السيرة', 'CV')}</a>
           <a href="#contact" className="hover:text-cyan-400 transition-colors">{t('التواصل', 'Contact')}</a>
         </div>

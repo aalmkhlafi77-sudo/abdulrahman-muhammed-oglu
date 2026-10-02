@@ -200,7 +200,7 @@ export const AdminVideos: React.FC = () => {
                     onChange={e => updateCurrentEdit('featured', e.target.checked)}
                     className="rounded bg-slate-950 border-slate-800"
                   />
-                  <label htmlFor={`featured-${vid.id}`} className="text-amber-400 font-bold">{t('تمييز كفيديو رسمي رئيسي (Featured)', 'Set as Primary Official Showcase')}</label>
+                      <label htmlFor={`featured-${vid.id}`} className="text-amber-400 font-bold">{t('تمييز الفيديو', 'Feature video')}</label>
                 </div>
                 <label className="flex items-center gap-2 text-slate-300">
                   <input type="checkbox" checked={editingVideo.published} onChange={e => updateCurrentEdit('published', e.target.checked)} className="rounded bg-slate-950 border-slate-800" />

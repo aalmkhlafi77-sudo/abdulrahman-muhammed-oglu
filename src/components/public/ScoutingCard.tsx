@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { calculateAge } from '../../services/dataService';
 import { useStructuredContent } from '../../context/StructuredContentContext';
@@ -11,6 +11,8 @@ export const ScoutingCard: React.FC = () => {
   const { achievements: allAchievements } = useStructuredContent();
   const achievements = allAchievements.filter(a => a.featured);
   const age = calculateAge(player.dob);
+  const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
+  useEffect(() => setProfilePhotoFailed(false), [player.profilePhoto]);
 
   return (
     <section id="scouting" className="py-16 bg-[#0e1420] border-y border-slate-800/80">
@@ -24,11 +26,11 @@ export const ScoutingCard: React.FC = () => {
               <span>{t('تقييم الكشافين السريع', '10-SECOND SCOUTING DOSSIER')}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
-              {t('بطاقة التقييم الرسمي للاعب', 'Official Player Scouting Summary')}
+              {t('بطاقة تقييم اللاعب', 'Player Scouting Summary')}
             </h2>
           </div>
           <span className="text-xs text-slate-400 mt-2 md:mt-0 font-latin">
-            {t('مُحدث للتواصل المباشر مع الأندية والكشافين', 'Updated for direct club & agent evaluation')}
+            {t('للتواصل المباشر مع الأندية والكشافين', 'Direct contact for clubs and scouts')}
           </span>
         </div>
 
@@ -40,10 +42,11 @@ export const ScoutingCard: React.FC = () => {
           {/* Left / Top: Player Avatar & Core Vitals */}
           <div className="lg:col-span-4 flex flex-col items-center text-center border-b lg:border-b-0 lg:border-r border-slate-800/80 pb-6 lg:pb-0 lg:pr-8">
             <div className="relative mb-4 w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-xl">
-              {player.profilePhoto ? (
+              {player.profilePhoto && !profilePhotoFailed ? (
                 <img
                   src={player.profilePhoto}
                   alt={player.nameEn}
+                  onError={() => setProfilePhotoFailed(true)}
                   style={player.profilePhotoDisplay ? {
                     objectFit: player.profilePhotoDisplay.fit as any,
                     objectPosition: `${player.profilePhotoDisplay.focalPoint?.x ?? player.profilePhotoDisplay.positionX ?? 50}% ${player.profilePhotoDisplay.focalPoint?.y ?? player.profilePhotoDisplay.positionY ?? 50}%`,
@@ -74,11 +77,11 @@ export const ScoutingCard: React.FC = () => {
             </p>
 
             {/* Core Specs Grid */}
-            <div className="grid grid-cols-3 gap-2 w-full text-center bg-slate-950/60 p-3 rounded-xl border border-slate-800 font-latin">
-              <div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full text-center bg-slate-950/60 p-3 rounded-xl border border-slate-800 font-latin">
+              {age !== null && <div>
                 <span className="block text-[10px] text-slate-400 uppercase">{t('العمر', 'Age')}</span>
                 <span className="text-sm font-extrabold text-white">{age} <span className="text-[10px] text-cyan-400">{t('سنة', 'yrs')}</span></span>
-              </div>
+              </div>}
               <div>
                 <span className="block text-[10px] text-slate-400 uppercase">{t('الطول', 'Height')}</span>
                 <span className="text-sm font-extrabold text-white">{player.heightCm} <span className="text-[10px] text-cyan-400">cm</span></span>
@@ -102,7 +105,7 @@ export const ScoutingCard: React.FC = () => {
           <div className="lg:col-span-5 flex flex-col justify-between py-2">
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 font-latin">
-                {t('المراكز التكتيكية الرسمية', 'Official Positions')}
+                {t('المراكز التكتيكية', 'Positions')}
               </h4>
               <div className="space-y-2 mb-6">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-cyan-500/30">
@@ -120,24 +123,22 @@ export const ScoutingCard: React.FC = () => {
               </div>
 
               {/* Key Achievements List */}
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-latin">
-                {t('أبرز الإنجازات الموثقة', 'Key Documented Honors')}
-              </h4>
-              <div className="space-y-2">
-                {achievements.slice(0, 3).map((ach) => (
-                  <div key={ach.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-800/40 text-xs">
-                    <Award className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-slate-100">{t(ach.titleAr, ach.titleEn)}</span>
-                      {ach.clubNameAr && (
-                        <span className="block text-[11px] text-slate-400 mt-0.5">
-                          {t(ach.clubNameAr, ach.clubNameEn || '')}
-                        </span>
-                      )}
+              {achievements.length > 0 && <>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 font-latin">
+                  {t('أبرز الإنجازات', 'Key Achievements')}
+                </h4>
+                <div className="space-y-2">
+                  {achievements.slice(0, 3).map((ach) => (
+                    <div key={ach.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-800/40 text-xs">
+                      <Award className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-slate-100">{t(ach.titleAr, ach.titleEn)}</span>
+                        {ach.clubNameAr && <span className="block text-[11px] text-slate-400 mt-0.5">{t(ach.clubNameAr, ach.clubNameEn || '')}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>}
             </div>
           </div>
 

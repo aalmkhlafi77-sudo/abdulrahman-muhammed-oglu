@@ -58,10 +58,10 @@ export const PlayerProfile: React.FC = () => {
             </div>
 
             {/* Professional Attributes Grid */}
-            <div className="bg-slate-900/80 rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-xl">
+            {attributes.length > 0 && <div className="bg-slate-900/80 rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-xl">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-cyan-400" />
-                <span>{t('السمات الشخصية والمهنية', 'Professional Attributes & Work Rate')}</span>
+                <span>{t('سمات اللاعب', 'Player Attributes')}</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -79,7 +79,7 @@ export const PlayerProfile: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div>}
 
           </div>
 
@@ -90,7 +90,7 @@ export const PlayerProfile: React.FC = () => {
             <div className="bg-slate-900/80 rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-xl">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-cyan-400" />
-                <span>{t('البيانات الشخصية الرسمية', 'Official Player Data')}</span>
+                <span>{t('بيانات اللاعب', 'Player Details')}</span>
               </h3>
 
               <div className="space-y-3 text-xs sm:text-sm">

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
-import { Briefcase, Trophy, Calendar, MapPin, ChevronRight, Star, Award, Image, Video } from 'lucide-react';
+import { Briefcase, Trophy, Award } from 'lucide-react';
 
 export const CareerTimeline: React.FC = () => {
   const { t, lang } = useLanguage();
-const { career: clubs } = useStructuredContent();
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const { career: clubs } = useStructuredContent();
+  const careerEntries = clubs.filter(club => club.clubNameAr || club.clubNameEn);
+
+  if (careerEntries.length === 0) return null;
 
   return (
     <section id="career" className="py-20 bg-[#0e1420] border-t border-slate-800">
@@ -16,20 +18,20 @@ const { career: clubs } = useStructuredContent();
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
             <Briefcase className="w-3.5 h-3.5" />
-            <span>{t('المسيرة الاحترافية الأكاديمية', 'Official Career Path')}</span>
+            <span>{t('المسيرة الكروية', 'Career Path')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
             {t('المحطات والأندية الرياضية', 'Career Timeline & Club History')}
           </h2>
           <p className="mt-3 text-sm text-slate-400">
-            {t('سلسلة الأندية التي مثلها اللاعب مع توثيق الإنجازات والجوائز المباشرة', 'Chronological club progression featuring top-scorer and assist achievements')}
+            {t('الأندية والإنجازات المسجلة ضمن مسيرة اللاعب', 'Clubs and achievements in the player’s career')}
           </p>
         </div>
 
         {/* Timeline Grid */}
         <div className="space-y-6 relative before:absolute before:inset-0 before:left-4 sm:before:left-1/2 before:-translate-x-1/2 before:w-0.5 before:bg-slate-800">
           
-          {clubs.filter(club => club.clubNameAr || club.clubNameEn).map((club, index) => {
+          {careerEntries.map((club, index) => {
             const isEven = index % 2 === 0;
             const hasAchievements = (club.achievementsAr && club.achievementsAr.length > 0) || (club.achievementsEn && club.achievementsEn.length > 0);
 
@@ -57,12 +59,6 @@ const { career: clubs } = useStructuredContent();
                     {/* Top Row: Club Name & Duration Badge */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 font-latin">
-                            <MapPin className="w-3 h-3 text-cyan-400" />
-                            {t(club.countryAr, club.countryEn)}
-                          </span>
-                        </div>
                         <h3 className="text-xl font-bold text-white mt-1">
                           {t(club.clubNameAr, club.clubNameEn)}
                         </h3>
@@ -75,24 +71,17 @@ const { career: clubs } = useStructuredContent();
                     </div>
 
                     {/* Level / Category */}
-                    <p className="text-xs font-semibold text-slate-400 mb-4 flex items-center gap-1.5">
+                    {(club.levelAr || club.levelEn) && <p className="text-xs font-semibold text-slate-400 mb-4 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                       <span>{t(club.levelAr, club.levelEn)}</span>
-                    </p>
-
-                    {/* Description */}
-                    {club.descriptionAr && (
-                      <p className="text-xs sm:text-sm text-slate-300 mb-4 leading-relaxed">
-                        {t(club.descriptionAr, club.descriptionEn || '')}
-                      </p>
-                    )}
+                    </p>}
 
                     {/* Prominent Achievements Showcase */}
                     {hasAchievements && (
                       <div className="mt-4 pt-4 border-t border-cyan-500/20">
                         <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                           <Trophy className="w-3.5 h-3.5" />
-                          <span>{t('إنجازات النادي الموثقة', 'Documented Honors')}</span>
+                          <span>{t('إنجازات النادي', 'Club Achievements')}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {(lang === 'ar' ? club.achievementsAr : club.achievementsEn)?.map((ach, i) => (

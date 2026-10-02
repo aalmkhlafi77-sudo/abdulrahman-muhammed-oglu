@@ -107,7 +107,7 @@ export const PlayerCV: React.FC = () => {
             <div className="text-xs text-slate-400 space-y-1 font-latin">
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الجنسية:' : 'Nationality:'}</strong> {cvLang === 'ar' ? player.nationalityAr : player.nationalityEn}</p>
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الموقع:' : 'Location:'}</strong> {cvLang === 'ar' ? player.locationAr : player.locationEn}</p>
-              <p><strong className="text-slate-200">{cvLang === 'ar' ? 'العمر:' : 'Age:'}</strong> {age} {cvLang === 'ar' ? 'سنة' : 'years'} (27/08/2003)</p>
+              {age !== null && <p><strong className="text-slate-200">{cvLang === 'ar' ? 'العمر:' : 'Age:'}</strong> {age} {cvLang === 'ar' ? 'سنة' : 'years'}</p>}
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'البريد:' : 'Email:'}</strong> {player.email}</p>
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الهاتف:' : 'Phone:'}</strong> {player.phone}</p>
             </div>
@@ -143,7 +143,7 @@ export const PlayerCV: React.FC = () => {
                 </p>
               </div>
 
-              <div>
+              {clubs.length > 0 && <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3 pb-1 border-b border-slate-800 font-latin">
                   {cvLang === 'ar' ? 'المسيرة الكروية والأندية' : 'CAREER & CLUB HISTORY'}
                 </h3>
@@ -151,10 +151,10 @@ export const PlayerCV: React.FC = () => {
                   {clubs.map(c => (
                     <div key={c.id} className="p-3 rounded-lg bg-slate-950 border border-slate-800">
                       <div className="flex justify-between font-bold text-slate-200">
-                        <span>{cvLang === 'ar' ? c.clubNameAr : c.clubNameEn} ({cvLang === 'ar' ? c.countryAr : c.countryEn})</span>
+                        <span>{cvLang === 'ar' ? c.clubNameAr : c.clubNameEn}</span>
                         <span className="text-cyan-400 font-latin">{cvLang === 'ar' ? c.durationAr : c.durationEn}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">{cvLang === 'ar' ? c.levelAr : c.levelEn}</p>
+                      {(cvLang === 'ar' ? c.levelAr : c.levelEn) && <p className="text-[11px] text-slate-400 mt-1">{cvLang === 'ar' ? c.levelAr : c.levelEn}</p>}
                       {(c.achievementsAr && c.achievementsAr.length > 0) && (
                         <p className="text-[11px] font-bold text-amber-400 mt-1">
                           ★ {(cvLang === 'ar' ? c.achievementsAr : c.achievementsEn)?.join(' · ')}
@@ -163,7 +163,7 @@ export const PlayerCV: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div>}
             </div>
           </div>
 

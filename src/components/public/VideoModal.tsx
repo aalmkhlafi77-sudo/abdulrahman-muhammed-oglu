@@ -2,7 +2,7 @@ import React from 'react';
 import { VideoHighlight } from '../../types/player';
 import { parseDriveUrl, parseYoutubeUrl } from '../../services/dataService';
 import { useLanguage } from '../../context/LanguageContext';
-import { X, ExternalLink, ShieldCheck } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 
 interface VideoModalProps {
   video: VideoHighlight | null;
@@ -12,7 +12,7 @@ interface VideoModalProps {
 export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
   const { t } = useLanguage();
 
-  if (!video) return null;
+  if (!video?.videoUrl?.trim()) return null;
 
   let embedSrc = video.videoUrl;
 
@@ -69,8 +69,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
         <div className="p-6 bg-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-cyan-400 mb-1">
-              <ShieldCheck className="w-4 h-4" />
-              <span>{t('مقطع مباراة رسمي موثق', 'Official Match Film')}</span>
+              <span>{t('مصدر الفيديو', 'Video source')}</span>
             </div>
             {video.descriptionAr && (
               <p className="text-xs text-slate-300">

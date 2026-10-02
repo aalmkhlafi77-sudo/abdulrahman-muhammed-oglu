@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { calculateAge, parseYoutubeUrl } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { Play, User, FileText, MapPin, Flag, ChevronDown } from 'lucide-react';
 
 interface HeroProps {
@@ -13,7 +14,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
   const { t } = useLanguage();
   const { player } = usePlayerInfo();
   const { hero: heroConfig } = useSiteSettings();
+  const { videos } = useStructuredContent();
   const age = calculateAge(player.dob);
+  const hasFeaturedVideo = videos.some(video => video.featured && video.published && Boolean(video.videoUrl?.trim()));
 
   const imgDisp = heroConfig.imageDisplay || {
     fit: 'cover',
@@ -168,21 +171,21 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
             <span className="text-lg font-extrabold text-white">{player.weightKg} <span className="text-xs text-cyan-400">KG</span></span>
           </div>
 
-          <div className="flex flex-col items-center px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md">
+          {age !== null && <div className="flex flex-col items-center px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md">
             <span className="text-xs text-slate-400 uppercase tracking-wider">{t('العمر', 'Age')}</span>
             <span className="text-lg font-extrabold text-white">{age} <span className="text-xs text-cyan-400">{t('سنة', 'YRS')}</span></span>
-          </div>
+          </div>}
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4 w-full max-w-md">
-          <button
+          {hasFeaturedVideo && <button
             onClick={onOpenHighlights}
             className="flex-1 min-w-[160px] flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-blue-700 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-98 transition-all"
           >
             <Play className="w-4 h-4 fill-slate-950" />
             <span>{t('مشاهدة الملخص', 'WATCH HIGHLIGHTS')}</span>
-          </button>
+          </button>}
 
           <a
             href="#scouting"

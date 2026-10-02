@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { initialAttributes, initialLanguages, initialPlayerInfo } from '../data/initialData';
+import { initialLanguages, initialPlayerInfo } from '../data/initialData';
 import type { PersonalAttribute, PlayerInfo, PlayerLanguage } from '../types/player';
 
 interface PlayerInfoContextValue {
@@ -14,7 +14,7 @@ const PlayerInfoContext = createContext<PlayerInfoContextValue | null>(null);
 export const PlayerInfoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [player, setPlayer] = useState<PlayerInfo>(initialPlayerInfo);
   const [languages, setLanguages] = useState<PlayerLanguage[]>(initialLanguages);
-  const [attributes, setAttributes] = useState<PersonalAttribute[]>(initialAttributes);
+  const [attributes, setAttributes] = useState<PersonalAttribute[]>([]);
 
   useEffect(() => {
     fetch('/api/player')

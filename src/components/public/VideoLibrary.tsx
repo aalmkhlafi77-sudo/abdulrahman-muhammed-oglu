@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
-import { VideoHighlight, VideoCategory } from '../../types/player';
-import { Film, Play, Clock, Filter, Tag, CheckCircle } from 'lucide-react';
+import { VideoHighlight } from '../../types/player';
+import { Film, Play, Clock, Filter } from 'lucide-react';
+import { MediaCover } from '../common/MediaCover';
 
 interface VideoLibraryProps {
   onPlayVideo: (video: VideoHighlight) => void;
@@ -11,10 +12,12 @@ interface VideoLibraryProps {
 export const VideoLibrary: React.FC<VideoLibraryProps> = ({ onPlayVideo }) => {
   const { t } = useLanguage();
   const { videos: allVideos, clubs } = useStructuredContent();
-  const videos = allVideos.filter(v => v.published);
+  const videos = allVideos.filter(v => v.published && Boolean(v.videoUrl?.trim()));
 
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [selectedClub, setSelectedClub] = useState<string>('ALL');
+
+  if (videos.length === 0) return null;
 
   const categories: { key: string; labelAr: string; labelEn: string }[] = [
     { key: 'ALL', labelAr: 'الكل', labelEn: 'ALL' },
@@ -41,7 +44,7 @@ export const VideoLibrary: React.FC<VideoLibraryProps> = ({ onPlayVideo }) => {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
             <Film className="w-3.5 h-3.5" />
-            <span>{t('مكتبة المقاطع والمهارات', 'Match Video Vault')}</span>
+            <span>{t('مقاطع الفيديو', 'Videos')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
             {t('فيديوهات المباريات والمهارات والأهداف', 'Highlights & Skills Library')}
@@ -103,12 +106,7 @@ export const VideoLibrary: React.FC<VideoLibraryProps> = ({ onPlayVideo }) => {
               >
                 {/* Video Card Media Top */}
                 <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
-                  <img 
-                    src={video.thumbnailUrl} 
-                    alt={video.titleEn}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  <MediaCover category="video" coverUrl={video.thumbnailUrl} alt={video.titleEn} className="absolute inset-0 transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
 
                   {/* Category Tag */}

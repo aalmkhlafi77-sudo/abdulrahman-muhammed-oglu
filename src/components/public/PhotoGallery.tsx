@@ -5,10 +5,11 @@ import { PhotoItem } from '../../types/player';
 import { Image, Maximize2, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const PhotoGallery: React.FC = () => {
-  const { t, isRtl } = useLanguage();
+  const { t } = useLanguage();
   const { photos: allPhotos } = usePhotos();
-  const photos = allPhotos.filter(p => p.published);
-  
+  const [failedPhotoIds, setFailedPhotoIds] = useState<Set<string>>(() => new Set());
+  const photos = allPhotos.filter(p => p.published && Boolean(p.imageUrl?.trim()) && !failedPhotoIds.has(p.id));
+
   const [selectedClub, setSelectedClub] = useState<string>('ALL');
   const [visibleCount, setVisibleCount] = useState<number>(12);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -40,6 +41,8 @@ export const PhotoGallery: React.FC = () => {
     setLightboxIndex((lightboxIndex + 1) % filteredPhotos.length);
   };
 
+  if (photos.length === 0) return null;
+
   return (
     <section id="gallery" className="py-20 bg-[#0b0f17]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,13 +51,13 @@ export const PhotoGallery: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
             <Image className="w-3.5 h-3.5" />
-            <span>{t('الأرشيف المصور المعتمد', 'Official Photo Archive')}</span>
+            <span>{t('معرض الصور', 'Photo Gallery')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
             {t('معرض صور المباريات والتدريبات', 'Match & Training Gallery')}
           </h2>
           <p className="mt-3 text-sm text-slate-400">
-            {t('الصور المنشورة والمعتمدة', 'Published match and training photos')}
+            {t('الصور المنشورة', 'Published photos')}
           </p>
         </div>
 
@@ -99,6 +102,7 @@ export const PhotoGallery: React.FC = () => {
                 alt={photo.titleEn || 'Player Photo'} 
                 loading="lazy"
                 referrerPolicy="no-referrer"
+                onError={() => setFailedPhotoIds(current => new Set(current).add(photo.id))}
                 style={{
                   objectPosition: photo.focalPoint 
                     ? `${photo.focalPoint.x}% ${photo.focalPoint.y}%` 
@@ -169,6 +173,10 @@ export const PhotoGallery: React.FC = () => {
               src={filteredPhotos[lightboxIndex].imageUrl} 
               alt="Expanded view" 
               referrerPolicy="no-referrer"
+              onError={() => {
+                setFailedPhotoIds(current => new Set(current).add(filteredPhotos[lightboxIndex].id));
+                setLightboxIndex(null);
+              }}
               className="max-w-full max-h-[70vh] object-contain rounded-xl border border-slate-800 shadow-2xl mb-4"
             />
             <div className="text-center">

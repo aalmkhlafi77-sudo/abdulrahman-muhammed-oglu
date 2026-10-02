@@ -1,11 +1,12 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
-import { Trophy, Medal, Star, BarChart2, Award } from 'lucide-react';
+import { Trophy, Medal, Star, Award } from 'lucide-react';
 
 export const Achievements: React.FC = () => {
   const { t } = useLanguage();
-const { achievements } = useStructuredContent();
+  const { achievements } = useStructuredContent();
+  if (achievements.length === 0) return null;
 
   const getBadgeIcon = (type?: string) => {
     switch (type) {
@@ -27,11 +28,8 @@ const { achievements } = useStructuredContent();
             <span>{t('السجل التهديفي والألقاب', 'Individual Honors')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            {t('أبرز إنجازات اللاعب الرسمية', 'Key Career Achievements')}
+            {t('أبرز إنجازات اللاعب', 'Key Career Achievements')}
           </h2>
-          <p className="mt-3 text-sm text-slate-400">
-            {t('الإنجازات الفردية والألقاب الموثقة رسمياً في البطولات التركية والقبرصية', 'Documented top goalscoring and assist achievements across Turkish & Cypriot leagues')}
-          </p>
         </div>
 
         {/* Achievements Cards Grid */}
@@ -58,16 +56,6 @@ const { achievements } = useStructuredContent();
                   {t(item.titleAr, item.titleEn)}
                 </h3>
 
-                {item.descriptionAr && (
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    {t(item.descriptionAr, item.descriptionEn || '')}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-6 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 font-latin">
-                <span>{t('موثق رسمياً', 'OFFICIALLY VERIFIED')}</span>
-                <span className="text-cyan-400 font-bold">100% MATCH PROOF</span>
               </div>
             </div>
           ))}

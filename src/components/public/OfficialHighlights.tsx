@@ -2,7 +2,8 @@ import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
 import { VideoHighlight } from '../../types/player';
-import { Play, Film, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
+import { MediaCover } from '../common/MediaCover';
+import { Play, Film, Clock, Sparkles } from 'lucide-react';
 
 interface OfficialHighlightsProps {
   onPlayVideo: (video: VideoHighlight) => void;
@@ -10,8 +11,8 @@ interface OfficialHighlightsProps {
 
 export const OfficialHighlights: React.FC<OfficialHighlightsProps> = ({ onPlayVideo }) => {
   const { t } = useLanguage();
-const { videos } = useStructuredContent();
-  const officialVideo = videos.find(v => v.featured) || videos[0];
+  const { videos } = useStructuredContent();
+  const officialVideo = videos.find(video => video.featured && video.published && Boolean(video.videoUrl?.trim()));
 
   if (!officialVideo) return null;
 
@@ -26,11 +27,8 @@ const { videos } = useStructuredContent();
             <span>{t('العرض التجميعي الرئيسي', 'PRIMARY SCOUTING VIDEO')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            {t('الفيديو التجميعي الرسمي للاعب', 'Official Scouting Highlights')}
+            {t('الفيديو المميز', 'Featured Video')}
           </h2>
-          <p className="mt-3 text-sm text-slate-400">
-            {t('ملخص شامل لمدة 4:30 دقيقة يستعرض التحركات التكتيكية والأهداف ومهارات التحكم', 'Comprehensive 4:32 highlight reel curated for clubs, scouts, and performance evaluators')}
-          </p>
         </div>
 
         {/* Wide Cinematic Banner */}
@@ -38,29 +36,24 @@ const { videos } = useStructuredContent();
           
           {/* Thumbnail Image Container */}
           <div className="relative aspect-video sm:aspect-[21/9] w-full overflow-hidden bg-slate-950">
-            <img 
-              src={officialVideo.thumbnailUrl} 
-              alt={officialVideo.titleEn}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-110"
-            />
+            <MediaCover category="video" coverUrl={officialVideo.thumbnailUrl} alt={officialVideo.titleEn} className="absolute inset-0" />
             {/* Scrim gradients on desktop */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f17]/90 via-[#0b0f17]/30 to-transparent hidden sm:block" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f17]/90 via-transparent to-[#0b0f17]/60 hidden sm:block" />
             <div className="absolute inset-0 bg-slate-950/20 sm:hidden block" />
 
             {/* Duration Tag */}
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[11px] sm:text-xs font-bold font-latin flex items-center gap-1.5 shadow-lg z-10">
+            {officialVideo.duration && <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-cyan-400 text-[11px] sm:text-xs font-bold font-latin flex items-center gap-1.5 shadow-lg z-10">
               <Clock className="w-3.5 h-3.5" />
-              <span>{officialVideo.duration || '04:32'}</span>
-            </div>
+              <span>{officialVideo.duration}</span>
+            </div>}
 
             {/* Play Button Overlay */}
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <button
                 onClick={() => onPlayVideo(officialVideo)}
                 className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/40 hover:scale-110 transition-all duration-300 group-hover:shadow-cyan-400/60 cursor-pointer"
-                aria-label="Play Official Video"
+                aria-label="Play featured video"
               >
                 <Play className="w-7 h-7 sm:w-10 sm:h-10 fill-slate-950 translate-x-0.5" />
               </button>
@@ -117,7 +110,7 @@ const { videos } = useStructuredContent();
                 <Film className="w-3.5 h-3.5" />
                 <span>{t('مشاهدة الفيديو', 'Watch Video')}</span>
               </button>
-              <span className="text-[10px] text-slate-500 uppercase font-latin font-bold">{officialVideo.videoSourceType || 'DRIVE'}</span>
+              <span className="text-[10px] text-slate-500 uppercase font-latin font-bold">{officialVideo.videoSourceType}</span>
             </div>
           </div>
 

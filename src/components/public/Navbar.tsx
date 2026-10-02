@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Play, Globe, Menu, X, Settings, Download } from 'lucide-react';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 
 interface NavbarProps {
   onOpenAdmin: () => void;
@@ -15,6 +16,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { player } = usePlayerInfo();
   const { branding } = useSiteSettings();
+  const { videos } = useStructuredContent();
+  const hasFeaturedVideo = videos.some(video => video.featured && video.published && Boolean(video.videoUrl?.trim()));
+  const hasVideos = videos.some(video => video.published && Boolean(video.videoUrl?.trim()));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
     { href: '#scouting', labelAr: 'التقييم السريع', labelEn: 'Scouting' },
     { href: '#profile', labelAr: 'الملف الشخصي', labelEn: 'Profile' },
     { href: '#career', labelAr: 'المسيرة', labelEn: 'Career' },
-    { href: '#highlights', labelAr: 'الفيديوهات', labelEn: 'Highlights' },
+    ...(hasVideos ? [{ href: '#highlights', labelAr: 'الفيديوهات', labelEn: 'Highlights' }] : []),
     { href: '#gallery', labelAr: 'الصور', labelEn: 'Gallery' },
     { href: '#contact', labelAr: 'التواصل', labelEn: 'Contact' },
   ];
@@ -75,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
               {t(player.nameAr, player.nameEn)}
             </span>
             <span className="text-[11px] font-medium text-cyan-400/90 tracking-widest uppercase font-latin">
-              {t('لاعب محترف', 'Professional Footballer')}
+              {t('لاعب كرة قدم', 'Football Player')}
             </span>
           </div>
         </a>
@@ -106,13 +110,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
           </button>
 
           {/* Official Highlights Quick CTA */}
-          <button
+          {hasFeaturedVideo && <button
             onClick={onOpenHighlights}
             className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-xs hover:shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95"
           >
             <Play className="w-3.5 h-3.5 fill-slate-950" />
-            <span>{t('الفيديو الرسمي', 'Official Highlights')}</span>
+            <span>{t('أبرز الفيديوهات', 'Featured Highlights')}</span>
           </button>
+          }
 
           <button
             onClick={onOpenAdmin}
@@ -147,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
               </a>
             ))}
             <div className="pt-2 flex flex-col gap-3">
-              <button
+              {hasFeaturedVideo && <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onOpenHighlights();
@@ -155,8 +160,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin, onOpenHighlights })
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm"
               >
                 <Play className="w-4 h-4 fill-slate-950" />
-                <span>{t('الفيديو الرسمي', 'Official Highlights')}</span>
+                <span>{t('أبرز الفيديوهات', 'Featured Highlights')}</span>
               </button>
+              }
             </div>
           </div>
         </div>

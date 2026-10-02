@@ -1,19 +1,19 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
-import { Activity, Info } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export const PerformanceStats: React.FC = () => {
   const { t } = useLanguage();
-const { stats } = useStructuredContent();
+  const { stats } = useStructuredContent();
 
   // Filter stats that have at least one defined metric to avoid displaying empty cards
-  const activeStats = stats.filter(s => 
-    s.matches !== undefined || 
-    s.goals !== undefined || 
-    s.assists !== undefined || 
-    s.minutes !== undefined
+  const activeStats = stats.filter(s =>
+    [s.matches, s.goals, s.assists, s.minutes, s.yellowCards, s.redCards]
+      .some(value => typeof value === 'number' && Number.isFinite(value))
   );
+
+  if (activeStats.length === 0) return null;
 
   return (
     <section id="stats" className="py-16 bg-[#0e1420] border-t border-slate-800">
@@ -24,26 +24,15 @@ const { stats } = useStructuredContent();
           <div>
             <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-cyan-400 uppercase font-latin mb-1">
               <Activity className="w-4 h-4" />
-              <span>{t('الأرقام والإحصائيات الحقيقية', 'Verified Performance Metrics')}</span>
+              <span>{t('الإحصائيات', 'Statistics')}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
               {t('سجل المشاركات والأداء', 'Performance Breakdown')}
             </h2>
           </div>
           
-          <div className="flex items-center gap-2 text-xs text-slate-400 mt-2 md:mt-0 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-            <Info className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span>{t('تُعرض الإحصائيات الموثقة رسمياً فقط دون تخمين', 'Only verified match figures displayed')}</span>
-          </div>
         </div>
 
-        {activeStats.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
-            <p className="text-sm text-slate-400">
-              {t('يتم تحديث السجل الإحصائي الكامل فور توثيقه من الاتحاد المعني.', 'Official match logs are pending federated verification.')}
-            </p>
-          </div>
-        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeStats.map((st) => (
               <div key={st.id} className="bg-slate-900 rounded-2xl p-6 border border-slate-800">
@@ -83,8 +72,6 @@ const { stats } = useStructuredContent();
               </div>
             ))}
           </div>
-        )}
-
       </div>
     </section>
   );

@@ -43,10 +43,8 @@ function AppContent() {
   const { videos } = useStructuredContent();
 
   const handleOpenOfficialHighlights = () => {
-    const official = videos.find(v => v.featured) || videos[0];
-    if (official) {
-      setActiveVideo(official);
-    }
+    const featuredVideo = videos.find(video => video.featured && video.published && Boolean(video.videoUrl?.trim()));
+    if (featuredVideo) setActiveVideo(featuredVideo);
   };
 
   const renderAdminTabContent = (tab: string) => {

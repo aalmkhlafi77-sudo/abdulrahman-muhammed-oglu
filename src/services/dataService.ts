@@ -43,15 +43,15 @@ const setStoredData = <T>(key: string, value: T): void => {
 };
 
 /** Calculates age in years from a DOB string (YYYY-MM-DD). */
-export const calculateAge = (dobString: string): number => {
-  if (!dobString) return 23;
+export const calculateAge = (dobString: string): number | null => {
+  if (!dobString) return null;
   const dob = new Date(dobString);
-  if (Number.isNaN(dob.getTime())) return 23;
+  if (Number.isNaN(dob.getTime())) return null;
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
   const month = today.getMonth() - dob.getMonth();
   if (month < 0 || (month === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
+  return age >= 0 ? age : null;
 };
 
 export const parseDriveUrl = (url: string): { embedUrl: string; directUrl: string; fileId?: string } => {

@@ -40,7 +40,7 @@ export const ContactSection: React.FC = () => {
     { key: 'facebook', url: player.socialLinks?.facebook, label: 'Facebook', icon: <Facebook className="w-5 h-5" /> },
     { key: 'twitter', url: player.socialLinks?.twitter, label: 'X / Twitter', icon: <Twitter className="w-5 h-5" /> },
     { key: 'transfermarkt', url: player.socialLinks?.transfermarkt, label: 'Transfermarkt', icon: <Globe className="w-5 h-5" /> },
-  ].filter(item => Boolean(item.url)); // Strictly hides empty links as mandated by requirement #33!
+  ].filter(item => Boolean(item.url?.trim()));
 
   return (
     <section id="contact" className="py-20 bg-[#0e1420] border-t border-slate-800">
@@ -50,10 +50,10 @@ export const ContactSection: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
             <Mail className="w-3.5 h-3.5" />
-            <span>{t('التواصل الرسمي مع الكشافين والأندية', 'Official Scouting & Agent Contact')}</span>
+            <span>{t('التواصل مع الأندية والكشافين', 'Club and Scout Contact')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            {t('Interested in Abdurahman?', 'Interested in Abdurahman?')}
+            {t('مهتم بالتواصل مع عبدالرحمن؟', 'Interested in contacting Abderrahman?')}
           </h2>
           <p className="mt-3 text-sm text-slate-400">
             {t('تواصل مباشر مع اللاعب أو إرسال استفسارات التعاقد والتجربة الميدانية', 'Direct communication channels for clubs, scouts, agents, and athletic directors')}
@@ -119,7 +119,7 @@ export const ContactSection: React.FC = () => {
               {socialIcons.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 font-latin">
-                    {t('حسابات التواصل الاجتماعي المعتمدة', 'Verified Social Profiles')}
+                    {t('حسابات التواصل الاجتماعي', 'Social Profiles')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {socialIcons.map((soc) => (
@@ -140,7 +140,7 @@ export const ContactSection: React.FC = () => {
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-500 font-latin">
-              <span>Istanbul, Türkiye · Turkish Football Federation ID Registered</span>
+              <span>Istanbul, Türkiye</span>
             </div>
           </div>
 
@@ -150,7 +150,7 @@ export const ContactSection: React.FC = () => {
               {t('إرسال طلب تقييم أو عرض رياضي', 'Submit Club Inquiry / Scouting Request')}
             </h3>
             <p className="text-xs text-slate-400 mb-6">
-              {t('نموذج المراسلة المباشرة الموجهة إلى الإدارة الرياضية للاعب', 'Direct inquiry form routed directly to Abdurahman and his sports management')}
+              {t('أرسل رسالة مباشرة إلى اللاعب', 'Send a message directly to the player')}
             </p>
 
             {submitted ? (
