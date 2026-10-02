@@ -33,12 +33,15 @@ const positiveId = (value: unknown): number | null => {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 };
 const text = (value: unknown): value is string => typeof value === 'string';
+const validThumbnailUrl = (value: string): boolean => value === ''
+  || /^https?:\/\//i.test(value)
+  || /^\/media\/[a-f0-9]{32}\.(?:jpe?g|png|webp)$/i.test(value);
 const hasUrlOnlyImages = (data: Content): boolean => {
   const imageFields = ['logoUrl', 'coverImageUrl', 'thumbnailUrl'];
   for (const key of imageFields) {
     const value = data[key];
     if (value === undefined || value === '') continue;
-    if (!text(value) || !/^https?:\/\//i.test(value)) return false;
+    if (!text(value) || (key === 'thumbnailUrl' ? !validThumbnailUrl(value) : !/^https?:\/\//i.test(value))) return false;
   }
   const gallery = data.galleryUrls;
   return gallery === undefined || (Array.isArray(gallery) && gallery.every((url) => text(url) && /^https?:\/\//i.test(url)));

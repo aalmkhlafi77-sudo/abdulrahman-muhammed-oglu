@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { parseDriveUrl } from '../../services/dataService';
 import { useStructuredContent } from '../../context/StructuredContentContext';
 import { VideoHighlight, VideoCategory } from '../../types/player';
 import { ImagePicker } from './ImagePicker';
-import { Plus, Trash2, Edit, Star, Video, Check, Link } from 'lucide-react';
+import { MediaCover } from '../common/MediaCover';
+import { Plus, Trash2, Edit, Star } from 'lucide-react';
 
 export const AdminVideos: React.FC = () => {
   const { t } = useLanguage();
@@ -47,10 +47,6 @@ export const AdminVideos: React.FC = () => {
     // Auto-detect drive link format
     if (field === 'videoUrl' && value.includes('drive.google.com')) {
       updated.videoSourceType = 'drive';
-      const parsed = parseDriveUrl(value);
-      if (parsed.directUrl) {
-        updated.thumbnailUrl = parsed.directUrl;
-      }
     }
 
     setEditingVideo(updated);
@@ -92,7 +88,7 @@ export const AdminVideos: React.FC = () => {
           <div key={vid.id} className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 space-y-3 p-4 flex flex-col justify-between">
             
             <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950">
-              <img src={vid.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+              <MediaCover category="video" coverUrl={vid.thumbnailUrl} alt={vid.titleEn} className="absolute inset-0" />
               <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-slate-950/80 text-cyan-400 text-[10px] font-extrabold font-latin">
                 {vid.category}
               </span>
