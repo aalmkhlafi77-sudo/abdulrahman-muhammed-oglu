@@ -7,13 +7,17 @@ import { defaultImageDisplayConfig } from '../../data/initialData';
 import { MediaPicker } from '../common/MediaPicker';
 import { ImageDisplayControls } from '../common/ImageDisplayControls';
 import { HeroCustomizer } from '../common/HeroCustomizer';
-import { Save, Check, FileImage, Layout, Sparkles, Sliders } from 'lucide-react';
+import { Save, Check, FileImage, Layout, Sparkles, Sliders, Trash2 } from 'lucide-react';
 
 export const AdminPlayerProfile: React.FC = () => {
   const { t } = useLanguage();
   const { player: sharedPlayer, setPlayer: setSharedPlayer } = usePlayerInfo();
   const [player, setPlayer] = useState<PlayerInfo>(sharedPlayer);
-  const [heroConfig, setHeroConfig] = useState<HeroConfig>(DataService.getHeroConfig());
+  const [heroConfig, setHeroConfig] = useState<HeroConfig>(() => ({
+    ...DataService.getHeroConfig(),
+    desktopImage: sharedPlayer.heroImage || '',
+    mobileImage: sharedPlayer.mobileHeroImage || '',
+  }));
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'hero' | 'imageControls'>('profile');
@@ -28,10 +32,28 @@ export const AdminPlayerProfile: React.FC = () => {
         if (value) {
           setPlayer(value);
           setSharedPlayer(value);
+          setHeroConfig(current => ({
+            ...current,
+            desktopImage: value.heroImage || '',
+            mobileImage: value.mobileHeroImage || '',
+          }));
         }
       })
       .catch(error => console.warn('Could not load player profile from server:', error));
   }, [setSharedPlayer]);
+
+  const removeImage = (target: NonNullable<typeof activePicker>) => {
+    if (target === 'profile') setPlayer(current => ({ ...current, profilePhoto: '' }));
+    if (target === 'hero') {
+      setPlayer(current => ({ ...current, heroImage: '' }));
+      setHeroConfig(current => ({ ...current, desktopImage: '' }));
+    }
+    if (target === 'mobileHero') {
+      setPlayer(current => ({ ...current, mobileHeroImage: '' }));
+      setHeroConfig(current => ({ ...current, mobileImage: '' }));
+    }
+    if (target === 'cutout') setPlayer(current => ({ ...current, playerCutoutImage: '' }));
+  };
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -142,46 +164,61 @@ export const AdminPlayerProfile: React.FC = () => {
               {/* Profile Photo */}
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                 <span className="font-bold text-slate-200 block truncate">{t('الصورة الشخصية', 'Profile Photo')}</span>
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
-                  <img src={player.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                  {player.profilePhoto ? (
+                    <img src={player.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] text-slate-500">{t('لا توجد صورة', 'No image')}</span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActivePicker('profile')}
-                  className="w-full py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors"
-                >
-                  {t('تغيير الصورة', 'Change Photo')}
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setActivePicker('profile')} className="py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors">
+                    {t('تغيير الصورة', 'Change Photo')}
+                  </button>
+                  <button type="button" onClick={() => removeImage('profile')} disabled={!player.profilePhoto} className="py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-red-500/10 disabled:hover:text-red-400">
+                    <Trash2 className="w-3.5 h-3.5 inline-block me-1" />{t('إزالة الصورة', 'Remove')}
+                  </button>
+                </div>
               </div>
 
               {/* Desktop Hero */}
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                 <span className="font-bold text-slate-200 block truncate">{t('غلاف الكمبيوتر', 'Desktop Hero')}</span>
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
-                  <img src={player.heroImage} alt="Desktop Hero" className="w-full h-full object-cover" />
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                  {player.heroImage ? (
+                    <img src={player.heroImage} alt="Desktop Hero" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] text-slate-500">{t('لا توجد صورة', 'No image')}</span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActivePicker('hero')}
-                  className="w-full py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors"
-                >
-                  {t('تغيير الصورة', 'Change Photo')}
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setActivePicker('hero')} className="py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors">
+                    {t('تغيير الصورة', 'Change Photo')}
+                  </button>
+                  <button type="button" onClick={() => removeImage('hero')} disabled={!player.heroImage} className="py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-red-500/10 disabled:hover:text-red-400">
+                    <Trash2 className="w-3.5 h-3.5 inline-block me-1" />{t('إزالة الصورة', 'Remove')}
+                  </button>
+                </div>
               </div>
 
               {/* Mobile Hero */}
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                 <span className="font-bold text-slate-200 block truncate">{t('غلاف الموبايل', 'Mobile Hero')}</span>
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
-                  <img src={player.mobileHeroImage || player.heroImage} alt="Mobile Hero" className="w-full h-full object-cover" />
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                  {player.mobileHeroImage ? (
+                    <img src={player.mobileHeroImage} alt="Mobile Hero" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] text-slate-500">{t('لا توجد صورة', 'No image')}</span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActivePicker('mobileHero')}
-                  className="w-full py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors"
-                >
-                  {t('تغيير الصورة', 'Change Photo')}
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setActivePicker('mobileHero')} className="py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors">
+                    {t('تغيير الصورة', 'Change Photo')}
+                  </button>
+                  <button type="button" onClick={() => removeImage('mobileHero')} disabled={!player.mobileHeroImage} className="py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-red-500/10 disabled:hover:text-red-400">
+                    <Trash2 className="w-3.5 h-3.5 inline-block me-1" />{t('إزالة الصورة', 'Remove')}
+                  </button>
+                </div>
               </div>
 
               {/* Cutout Image */}
@@ -191,16 +228,17 @@ export const AdminPlayerProfile: React.FC = () => {
                   {player.playerCutoutImage ? (
                     <img src={player.playerCutoutImage} alt="Cutout" className="w-full h-full object-contain" />
                   ) : (
-                    <span className="text-[10px] text-slate-500">{t('لا توجد صورة مقصوصة', 'No Cutout Image')}</span>
+                    <span className="text-[10px] text-slate-500">{t('لا توجد صورة', 'No image')}</span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActivePicker('cutout')}
-                  className="w-full py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors"
-                >
-                  {t('تغيير الصورة', 'Change Photo')}
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setActivePicker('cutout')} className="py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold hover:bg-cyan-500 hover:text-slate-950 transition-colors">
+                    {t('تغيير الصورة', 'Change Photo')}
+                  </button>
+                  <button type="button" onClick={() => removeImage('cutout')} disabled={!player.playerCutoutImage} className="py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-red-500/10 disabled:hover:text-red-400">
+                    <Trash2 className="w-3.5 h-3.5 inline-block me-1" />{t('إزالة الصورة', 'Remove')}
+                  </button>
+                </div>
               </div>
 
             </div>
@@ -359,10 +397,11 @@ export const AdminPlayerProfile: React.FC = () => {
           config={heroConfig}
           onChange={(newHeroCfg) => {
             setHeroConfig(newHeroCfg);
-            // Also sync hero image with player.heroImage
-            if (newHeroCfg.desktopImage) {
-              setPlayer(prev => ({ ...prev, heroImage: newHeroCfg.desktopImage }));
-            }
+            setPlayer(prev => ({
+              ...prev,
+              heroImage: newHeroCfg.desktopImage || '',
+              mobileHeroImage: newHeroCfg.mobileImage || '',
+            }));
           }}
         />
       )}
@@ -385,7 +424,7 @@ export const AdminPlayerProfile: React.FC = () => {
               value={
                 activePicker === 'profile' ? player.profilePhoto :
                 activePicker === 'hero' ? player.heroImage :
-                activePicker === 'mobileHero' ? (player.mobileHeroImage || player.heroImage) :
+                activePicker === 'mobileHero' ? (player.mobileHeroImage || '') :
                 (player.playerCutoutImage || '')
               }
               onChange={(url) => {

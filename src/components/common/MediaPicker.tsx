@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, compressImage, parseDriveUrl } from '../../services/dataService';
-import { PhotoItem } from '../../types/player';
+import { getAssets, uploadImage } from '../../services/photoApi';
+import type { UploadedAsset } from '../../services/photoApi';
 import { Upload, Image as ImageIcon, Link as LinkIcon, Check, Search, X } from 'lucide-react';
 
 interface MediaPickerProps {
@@ -17,70 +17,59 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
   onClose,
   title
 }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const fileInputId = useId();
   const [activeTab, setActiveTab] = useState<'upload' | 'library' | 'url'>('upload');
-  
-  // Device Upload state
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-
-  // Library state
-  const [photos] = useState<PhotoItem[]>(DataService.getPhotos());
+  const [assets, setAssets] = useState<UploadedAsset[]>([]);
+  const [loadingAssets, setLoadingAssets] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // URL State
   const [inputUrl, setInputUrl] = useState(value);
+  const [error, setError] = useState('');
 
-  // File Upload Handler
+  useEffect(() => {
+    let active = true;
+    setLoadingAssets(true);
+    getAssets()
+      .then(items => { if (active) setAssets(items); })
+      .catch(reason => {
+        if (active) setError(reason instanceof Error ? reason.message : t('تعذر تحميل مكتبة الصور.', 'Could not load image library.'));
+      })
+      .finally(() => { if (active) setLoadingAssets(false); });
+    return () => { active = false; };
+  }, [lang]);
+
   const handleFileChange = async (file: File) => {
-    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError(t('يُسمح فقط بصور JPG وPNG وWebP.', 'Only JPG, PNG, and WebP images are allowed.'));
+      return;
+    }
+
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const rawData = e.target?.result as string;
-      const compressed = await compressImage(rawData, 1200, 0.82);
-
-      // Register into Media Library
-      const newPhotoItem: PhotoItem = {
-        id: `upload-${Date.now()}`,
-        fileName: file.name,
-        originalFileName: file.name,
-        titleAr: file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
-        titleEn: file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
-        imageUrl: compressed,
-        sourceType: 'upload',
-        featured: false,
-        published: true,
-        sortOrder: photos.length + 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const updated = [newPhotoItem, ...photos];
-      DataService.updatePhotos(updated);
-
-      onChange(compressed);
-      setUploading(false);
+    setError('');
+    try {
+      const asset = await uploadImage(file);
+      setAssets(current => [asset, ...current.filter(item => item.id !== asset.id)]);
+      onChange(asset.imageUrl);
       if (onClose) onClose();
-    };
-    reader.readAsDataURL(file);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t('تعذر رفع الصورة.', 'Could not upload image.'));
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputUrl) return;
-    let finalUrl = inputUrl.trim();
-    if (finalUrl.includes('drive.google.com')) {
-      finalUrl = parseDriveUrl(finalUrl).directUrl;
-    }
-    onChange(finalUrl);
+    onChange(inputUrl.trim());
     if (onClose) onClose();
   };
 
-  const filteredPhotos = photos.filter(p => 
-    p.titleEn?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.titleAr?.includes(searchQuery) ||
-    p.clubNameAr?.includes(searchQuery)
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredAssets = assets.filter(asset =>
+    asset.fileName.toLowerCase().includes(normalizedSearch) || asset.mimeType.toLowerCase().includes(normalizedSearch)
   );
 
   return (
@@ -101,6 +90,12 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
           </button>
         )}
       </div>
+
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+          {error}
+        </div>
+      )}
 
       {/* Tabs Header */}
       <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs">
@@ -134,7 +129,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
           }`}
         >
           <LinkIcon className="w-4 h-4" />
-          <span>{t('رابط خارجي / Drive', 'External URL')}</span>
+          <span>{t('رابط خارجي', 'External URL')}</span>
         </button>
       </div>
 
@@ -146,7 +141,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
           onDrop={(e) => {
             e.preventDefault();
             setDragActive(false);
-            if (e.dataTransfer.files?.[0]) handleFileChange(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files?.[0]) void handleFileChange(e.dataTransfer.files[0]);
           }}
           className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-colors ${
             dragActive ? 'border-cyan-400 bg-cyan-500/10' : 'border-slate-800 hover:border-slate-700 bg-slate-950'
@@ -154,18 +149,18 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
         >
           <input 
             type="file" 
-            accept="image/*"
-            id="media-picker-file-input"
+            accept="image/jpeg,image/png,image/webp"
+            id={fileInputId}
             className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
+            onChange={(e) => { if (e.target.files?.[0]) void handleFileChange(e.target.files[0]); }}
           />
-          <label htmlFor="media-picker-file-input" className="cursor-pointer block space-y-3">
+          <label htmlFor={fileInputId} className="cursor-pointer block space-y-3">
             <Upload className="w-10 h-10 text-cyan-400 mx-auto animate-bounce" />
             <div className="space-y-1">
               <p className="font-bold text-xs sm:text-sm text-slate-200">
-                {uploading ? t('جاري معالجة وتصغير الصورة...', 'Compressing and processing...') : t('انقر أو اسحب ملف الصورة هنا للرفع', 'Click or drag image file here to upload')}
+                {uploading ? t('جاري رفع الصورة...', 'Uploading image...') : t('انقر أو اسحب ملف الصورة هنا للرفع', 'Click or drag image file here to upload')}
               </p>
-              <p className="text-[11px] text-slate-500 font-latin">Supports JPG, PNG, WEBP, AVIF (Auto compressed)</p>
+              <p className="text-[11px] text-slate-500 font-latin">JPG, JPEG, PNG, WebP</p>
             </div>
           </label>
         </div>
@@ -186,21 +181,27 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-60 overflow-y-auto p-1 bg-slate-950 rounded-xl border border-slate-800">
-            {filteredPhotos.map((photo) => {
-              const isSelected = value === photo.imageUrl;
+            {loadingAssets && (
+              <p className="col-span-full p-4 text-center text-xs text-slate-500">{t('جاري تحميل المكتبة...', 'Loading library...')}</p>
+            )}
+            {!loadingAssets && filteredAssets.length === 0 && (
+              <p className="col-span-full p-4 text-center text-xs text-slate-500">{t('لا توجد صور مرفوعة.', 'No uploaded images.')}</p>
+            )}
+            {filteredAssets.map((asset) => {
+              const isSelected = value === asset.imageUrl;
               return (
                 <button
-                  key={photo.id}
+                  key={asset.id}
                   type="button"
                   onClick={() => {
-                    onChange(photo.imageUrl);
+                    onChange(asset.imageUrl);
                     if (onClose) onClose();
                   }}
                   className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all group ${
                     isSelected ? 'border-cyan-400 ring-2 ring-cyan-400/40' : 'border-slate-800 hover:border-slate-600'
                   }`}
                 >
-                  <img src={photo.imageUrl} alt={photo.titleEn} className="w-full h-full object-cover" />
+                  <img src={asset.imageUrl} alt={asset.fileName} className="w-full h-full object-cover" />
                   {isSelected && (
                     <div className="absolute inset-0 bg-cyan-500/30 flex items-center justify-center">
                       <Check className="w-5 h-5 text-slate-950 bg-cyan-400 rounded-full p-0.5" />
@@ -213,17 +214,17 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
         </div>
       )}
 
-      {/* Tab 3: URL / Google Drive */}
+      {/* Tab 3: External URL */}
       {activeTab === 'url' && (
         <form onSubmit={handleUrlSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">{t('رابط الصورة المباشر أو Google Drive', 'Direct Image or Google Drive URL')}</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">{t('رابط صورة مباشر', 'Direct Image URL')}</label>
             <input 
               type="url" 
               required
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="https://drive.google.com/file/d/..."
+              placeholder="https://example.com/image.jpg"
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 font-latin"
             />
           </div>

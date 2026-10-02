@@ -54,9 +54,9 @@ export const initialPlayerInfo: PlayerInfo = {
   educationAr: "الثانوية العامة (2021)",
   educationEn: "High School (2021)",
 
-  heroImage: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1600&auto=format&fit=crop",
-  profilePhoto: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800&auto=format&fit=crop",
-  mobileHeroImage: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop",
+  heroImage: "",
+  profilePhoto: "",
+  mobileHeroImage: "",
 
   socialLinks: {
     instagram: "https://instagram.com",

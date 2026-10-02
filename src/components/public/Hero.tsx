@@ -29,8 +29,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
     blur: 0
   };
 
-  const imageSrc = heroConfig.desktopImage || player.heroImage;
-  const mobileImgSrc = heroConfig.mobileImage || imageSrc;
+  const imageSrc = player.heroImage;
+  const mobileImgSrc = player.mobileHeroImage || '';
 
   const focalX = imgDisp.focalPoint?.x ?? imgDisp.positionX ?? 50;
   const focalY = imgDisp.focalPoint?.y ?? imgDisp.positionY ?? 50;
@@ -61,23 +61,44 @@ export const Hero: React.FC<HeroProps> = ({ onOpenHighlights }) => {
           </div>
         ) : (
           /* Image Mode */
-          <picture className="w-full h-full block">
-            {heroConfig.mobileImage && (
-              <source media="(max-width: 640px)" srcSet={mobileImgSrc} />
+          <div className="w-full h-full">
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={player.nameEn}
+                referrerPolicy="no-referrer"
+                style={{
+                  objectFit: imgDisp.fit as any,
+                  objectPosition: `${focalX}% ${focalY}%`,
+                  transform: `scale(${imgDisp.zoom || 1}) translate(${imgDisp.panX || 0}px, ${imgDisp.panY || 0}px)`,
+                  filter: `brightness(${imgDisp.brightness ?? 100}%) contrast(${imgDisp.contrast ?? 100}%) saturate(${imgDisp.saturation ?? 100}%) opacity(${imgDisp.opacity ?? 100}%) blur(${imgDisp.blur ?? 0}px)`
+                }}
+                className={`hidden sm:block w-full h-full ${animationClass} ${heroConfig.pauseOnHover ? 'hover:animation-paused' : ''}`}
+              />
+            ) : (
+              <div className="hidden sm:flex w-full h-full items-center justify-center text-sm text-slate-500">
+                {t('لا توجد صورة', 'No image')}
+              </div>
             )}
-            <img 
-              src={imageSrc} 
-              alt={player.nameEn}
-              referrerPolicy="no-referrer"
-              style={{
-                objectFit: imgDisp.fit as any,
-                objectPosition: `${focalX}% ${focalY}%`,
-                transform: `scale(${imgDisp.zoom || 1}) translate(${imgDisp.panX || 0}px, ${imgDisp.panY || 0}px)`,
-                filter: `brightness(${imgDisp.brightness ?? 100}%) contrast(${imgDisp.contrast ?? 100}%) saturate(${imgDisp.saturation ?? 100}%) opacity(${imgDisp.opacity ?? 100}%) blur(${imgDisp.blur ?? 0}px)`
-              }}
-              className={`w-full h-full ${animationClass} ${heroConfig.pauseOnHover ? 'hover:animation-paused' : ''}`}
-            />
-          </picture>
+            {mobileImgSrc ? (
+              <img
+                src={mobileImgSrc}
+                alt={player.nameEn}
+                referrerPolicy="no-referrer"
+                style={{
+                  objectFit: (imgDisp.mobileFit || imgDisp.fit) as any,
+                  objectPosition: `${imgDisp.mobileFocalPoint?.x ?? imgDisp.mobilePositionX ?? focalX}% ${imgDisp.mobileFocalPoint?.y ?? imgDisp.mobilePositionY ?? focalY}%`,
+                  transform: `scale(${imgDisp.mobileZoom || imgDisp.zoom || 1}) translate(${imgDisp.panX || 0}px, ${imgDisp.panY || 0}px)`,
+                  filter: `brightness(${imgDisp.brightness ?? 100}%) contrast(${imgDisp.contrast ?? 100}%) saturate(${imgDisp.saturation ?? 100}%) opacity(${imgDisp.opacity ?? 100}%) blur(${imgDisp.blur ?? 0}px)`
+                }}
+                className={`sm:hidden w-full h-full ${animationClass} ${heroConfig.pauseOnHover ? 'hover:animation-paused' : ''}`}
+              />
+            ) : (
+              <div className="sm:hidden flex w-full h-full items-center justify-center text-sm text-slate-500">
+                {t('لا توجد صورة', 'No image')}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Dynamic Overlay Layer */}

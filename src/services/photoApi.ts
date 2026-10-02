@@ -21,10 +21,14 @@ const readResponse = async <T>(response: Response): Promise<T> => {
 
 export const getPhotos = async (): Promise<PhotoItem[]> => readResponse(await fetch('/api/photos'));
 
+export const getAssets = async (): Promise<UploadedAsset[]> => readResponse(await fetch('/api/assets', {
+  credentials: 'include',
+}));
+
 export const uploadImage = async (file: File): Promise<UploadedAsset> => {
   const form = new FormData();
   form.append('file', file);
-  return readResponse(await fetch('/api/assets/upload', { method: 'POST', body: form }));
+  return readResponse(await fetch('/api/assets/upload', { method: 'POST', credentials: 'include', body: form }));
 };
 
 export const createPhoto = async (details: PhotoDetails): Promise<PhotoItem> => readResponse(await fetch('/api/photos', {

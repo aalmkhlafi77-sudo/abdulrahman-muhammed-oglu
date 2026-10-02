@@ -12,6 +12,14 @@ interface PlayerRow extends RowDataPacket {
 }
 
 const router = Router();
+const safePlayerImage = (value: string): boolean => {
+  if (value === '' || /^https?:\/\//i.test(value)) return true;
+  return value.startsWith('/media/')
+    && /^\/media\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value)
+    && !value.includes('..')
+    && !value.includes('//');
+};
+
 const requiredTextFields = [
   'nameAr', 'nameEn', 'nationalityAr', 'nationalityEn', 'locationAr', 'locationEn',
   'primaryPositionAr', 'primaryPositionEn', 'secondaryPositionAr', 'secondaryPositionEn',
@@ -35,8 +43,8 @@ const validPlayer = (value: unknown): value is Record<string, unknown> => {
   const imageFields = ['heroImage', 'profilePhoto', 'mobileHeroImage', 'playerCutoutImage', 'aboutImage', 'cvPreviewImage', 'socialShareImage'];
   for (const field of imageFields) {
     const image = player[field];
-    if (image === undefined || image === '') continue;
-    if (typeof image !== 'string' || !/^https?:\/\//i.test(image)) return false;
+    if (image === undefined) continue;
+    if (typeof image !== 'string' || !safePlayerImage(image)) return false;
   }
   return true;
 };

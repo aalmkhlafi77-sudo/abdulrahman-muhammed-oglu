@@ -40,20 +40,26 @@ export const ScoutingCard: React.FC = () => {
           {/* Left / Top: Player Avatar & Core Vitals */}
           <div className="lg:col-span-4 flex flex-col items-center text-center border-b lg:border-b-0 lg:border-r border-slate-800/80 pb-6 lg:pb-0 lg:pr-8">
             <div className="relative mb-4 w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-xl">
-              <img 
-                src={player.profilePhoto} 
-                alt={player.nameEn} 
-                style={player.profilePhotoDisplay ? {
-                  objectFit: player.profilePhotoDisplay.fit as any,
-                  objectPosition: `${player.profilePhotoDisplay.focalPoint?.x ?? player.profilePhotoDisplay.positionX ?? 50}% ${player.profilePhotoDisplay.focalPoint?.y ?? player.profilePhotoDisplay.positionY ?? 50}%`,
-                  transform: `scale(${player.profilePhotoDisplay.zoom || 1}) translate(${player.profilePhotoDisplay.panX || 0}px, ${player.profilePhotoDisplay.panY || 0}px)`,
-                  filter: `brightness(${player.profilePhotoDisplay.brightness ?? 100}%) contrast(${player.profilePhotoDisplay.contrast ?? 100}%) saturate(${player.profilePhotoDisplay.saturation ?? 100}%) opacity(${player.profilePhotoDisplay.opacity ?? 100}%) blur(${player.profilePhotoDisplay.blur ?? 0}px)`
-                } : {
-                  objectFit: 'cover',
-                  objectPosition: 'center'
-                }}
-                className="w-full h-full transition-all duration-300"
-              />
+              {player.profilePhoto ? (
+                <img
+                  src={player.profilePhoto}
+                  alt={player.nameEn}
+                  style={player.profilePhotoDisplay ? {
+                    objectFit: player.profilePhotoDisplay.fit as any,
+                    objectPosition: `${player.profilePhotoDisplay.focalPoint?.x ?? player.profilePhotoDisplay.positionX ?? 50}% ${player.profilePhotoDisplay.focalPoint?.y ?? player.profilePhotoDisplay.positionY ?? 50}%`,
+                    transform: `scale(${player.profilePhotoDisplay.zoom || 1}) translate(${player.profilePhotoDisplay.panX || 0}px, ${player.profilePhotoDisplay.panY || 0}px)`,
+                    filter: `brightness(${player.profilePhotoDisplay.brightness ?? 100}%) contrast(${player.profilePhotoDisplay.contrast ?? 100}%) saturate(${player.profilePhotoDisplay.saturation ?? 100}%) opacity(${player.profilePhotoDisplay.opacity ?? 100}%) blur(${player.profilePhotoDisplay.blur ?? 0}px)`
+                  } : {
+                    objectFit: 'cover',
+                    objectPosition: 'center'
+                  }}
+                  className="w-full h-full transition-all duration-300"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-950 text-xs text-slate-500">
+                  {t('لا توجد صورة', 'No image')}
+                </div>
+              )}
               <span className="absolute bottom-2 right-2 px-2.5 py-1 rounded-md bg-cyan-500 text-slate-950 text-[11px] font-extrabold font-latin tracking-wider uppercase shadow-md z-10">
                 {player.nationalityEn}
               </span>
