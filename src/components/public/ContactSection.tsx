@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { createInquiry } from '../../services/inquiriesApi';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Mail, Phone, MessageSquare, Send, CheckCircle, Instagram, Youtube, Facebook, Twitter, Globe } from 'lucide-react';
 
@@ -9,32 +9,28 @@ export const ContactSection: React.FC = () => {
   const { player } = usePlayerInfo();
 
   const [form, setForm] = useState({
-    senderName: '',
-    senderEmail: '',
-    senderPhone: '',
+    name: '',
+    email: '',
     organization: '',
-    organizationType: 'club' as const,
     message: ''
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.senderName || !form.senderEmail || !form.message) return;
-
-    DataService.addInquiry(form);
-    setSubmitted(true);
-    setForm({
-      senderName: '',
-      senderEmail: '',
-      senderPhone: '',
-      organization: '',
-      organizationType: 'club',
-      message: ''
-    });
-
-    setTimeout(() => setSubmitted(false), 6000);
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      await createInquiry(form);
+      setSubmitted(true);
+      setForm({ name: '', email: '', organization: '', message: '' });
+      setTimeout(() => setSubmitted(false), 6000);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : t('تعذر إرسال الرسالة.', 'Unable to submit inquiry.'));
+    } finally { setSubmitting(false); }
   };
 
   const socialIcons = [
@@ -174,8 +170,8 @@ export const ContactSection: React.FC = () => {
                     <input 
                       type="text" 
                       required
-                      value={form.senderName}
-                      onChange={e => setForm({...form, senderName: e.target.value})}
+                      value={form.name}
+                      onChange={e => setForm({...form, name: e.target.value})}
                       placeholder={t('أدخل اسمك', 'Enter your name')}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500"
                     />
@@ -186,41 +182,23 @@ export const ContactSection: React.FC = () => {
                     <input 
                       type="email" 
                       required
-                      value={form.senderEmail}
-                      onChange={e => setForm({...form, senderEmail: e.target.value})}
+                      value={form.email}
+                      onChange={e => setForm({...form, email: e.target.value})}
                       placeholder="scout@club.com"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500 font-latin"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">{t('اسم النادي / الجهة', 'Club / Organization Name')}</label>
-                    <input 
-                      type="text" 
-                      value={form.organization}
-                      onChange={e => setForm({...form, organization: e.target.value})}
-                      placeholder={t('مثال: نادي إسطنبول باشاك شهير', 'e.g. Football Agency / FC Club')}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">{t('صفة المرسل', 'Role / Organization Type')}</label>
-                    <select
-                      value={form.organizationType}
-                      onChange={e => setForm({...form, organizationType: e.target.value as any})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500"
-                    >
-                      <option value="club">{t('إدارة نادٍ محترف', 'Professional Club Management')}</option>
-                      <option value="scout">{t('كشاف لاعبين (Scout)', 'Football Scout')}</option>
-                      <option value="agent">{t('وكيل لاعبين (Agent)', 'Licensed Agent')}</option>
-                      <option value="academy">{t('أكاديمية رياضية', 'Sports Academy')}</option>
-                      <option value="media">{t('وسائل إعلام', 'Sports Media')}</option>
-                      <option value="other">{t('جهة أخرى', 'Other')}</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">{t('اسم النادي / الجهة', 'Club / Organization Name')}</label>
+                  <input
+                    type="text"
+                    value={form.organization}
+                    onChange={e => setForm({...form, organization: e.target.value})}
+                    placeholder={t('مثال: نادي إسطنبول باشاك شهير', 'e.g. Football Agency / FC Club')}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500"
+                  />
                 </div>
 
                 <div>
@@ -235,12 +213,14 @@ export const ContactSection: React.FC = () => {
                   />
                 </div>
 
+                {submitError && <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">{submitError}</p>}
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-extrabold text-xs shadow-lg hover:shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4 fill-slate-950" />
-                  <span>{t('إرسال الاستفسار الآن', 'SEND INQUIRY NOW')}</span>
+                  <span>{submitting ? t('جارٍ الإرسال...', 'Submitting...') : t('إرسال الاستفسار الآن', 'SEND INQUIRY NOW')}</span>
                 </button>
 
               </form>

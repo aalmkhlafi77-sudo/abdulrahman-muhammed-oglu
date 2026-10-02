@@ -208,49 +208,6 @@ export interface PhotoItem {
   updatedAt: string;
 }
 
-export interface MediaItem {
-  id: string;
-  titleAr: string;
-  titleEn: string;
-  sourceNameAr: string;
-  sourceNameEn: string;
-  date?: string;
-  mediaType: 'interview' | 'field_interview' | 'clip' | 'press' | 'video' | 'article' | 'image' | 'gallery';
-  url: string; // Video URL, article URL, etc.
-  thumbnailUrl?: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
-  
-  // Articles
-  summaryAr?: string;
-  summaryEn?: string;
-  contentAr?: string; // Rich-Text / HTML content
-  contentEn?: string;
-  authorAr?: string;
-  authorEn?: string;
-  
-  // Custom Media properties
-  clubNameAr?: string;
-  clubNameEn?: string;
-  sourceType?: 'upload' | 'google_drive' | 'external_url' | 'media_library';
-  photographerAr?: string;
-  photographerEn?: string;
-  featured?: boolean;
-  published?: boolean;
-  sortOrder?: number;
-  galleryUrls?: string[];
-  tags?: string[];
-}
-
-export interface DocumentCV {
-  id: string;
-  titleAr: string;
-  titleEn: string;
-  language: 'ar' | 'en' | 'both';
-  fileUrl: string; // PDF link or drive preview
-  updatedAt: string;
-}
-
 export interface SectionConfig {
   id: string;
   key: string;
@@ -284,14 +241,13 @@ export interface SEOConfig {
 
 export interface ContactInquiry {
   id: string;
-  senderName: string;
-  senderEmail: string;
-  senderPhone?: string;
+  name: string;
+  email: string;
   organization?: string;
-  organizationType: 'club' | 'scout' | 'agent' | 'academy' | 'media' | 'other';
   message: string;
   createdAt: string;
-  read: boolean;
+  status: string;
+  readAt: string | null;
 }
 
 export type FitMode = 'cover' | 'contain' | 'fill' | 'scale-down' | 'auto';

@@ -5,8 +5,11 @@ import playerRouter from './server/routes/player';
 import { careerRoutes, clubRoutes } from './server/routes/coreContent';
 import imageRoutes from './server/routes/images';
 import settingsRoutes from './server/routes/settings';
+import mediaRoutes from './server/routes/media';
+import documentRoutes from './server/routes/documents';
+import inquiryRoutes from './server/routes/inquiries';
 import { db } from './server/config/database';
-import { getUploadConfig, storedImageName } from './server/config/uploads';
+import { getUploadConfig, storedDocumentName, storedImageName } from './server/config/uploads';
 
 export const app = express();
 
@@ -17,6 +20,9 @@ app.use('/api', clubRoutes);
 app.use('/api/career', careerRoutes);
 app.use('/api', imageRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/inquiries', inquiryRoutes);
 
 app.get('/api/health', async (_req, res) => {
   try {
@@ -30,6 +36,20 @@ app.get('/api/health', async (_req, res) => {
 
 const uploadConfig = getUploadConfig();
 if (uploadConfig) {
+  app.get(`${uploadConfig.mountPath}/documents/:filename`, (req, res) => {
+    const filename = req.params.filename;
+    if (!storedDocumentName(filename)) { res.status(404).send(); return; }
+    const documentDirectory = path.resolve(uploadConfig.root, 'documents');
+    const documentPath = path.resolve(documentDirectory, filename);
+    if (!documentPath.startsWith(`${documentDirectory}${path.sep}`)) { res.status(404).send(); return; }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="official-cv.pdf"');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', 'sandbox');
+    res.sendFile(documentPath, (error) => {
+      if (error && !res.headersSent) res.status(404).send();
+    });
+  });
   app.get(`${uploadConfig.mountPath}/:filename`, (req, res) => {
     const filename = req.params.filename;
     if (!storedImageName(filename)) { res.status(404).send(); return; }

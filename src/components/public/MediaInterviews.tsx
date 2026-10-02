@@ -1,76 +1,52 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
-import { Radio, ExternalLink, Mic, Newspaper } from 'lucide-react';
+import { getPublicMedia, MediaItem } from '../../services/mediaApi';
+import { ExternalLink, FileText, Image as ImageIcon, Mic, Video } from 'lucide-react';
 
 export const MediaInterviews: React.FC = () => {
   const { t } = useLanguage();
-  const mediaItems = DataService.getMedia();
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    getPublicMedia().then(setMediaItems).catch(error => console.warn('Could not load published media:', error));
+  }, []);
+
+  if (!mediaItems.length) return null;
+
+  const iconFor = (category: MediaItem['category']) => {
+    if (category === 'interview') return <Mic className="h-3.5 w-3.5" />;
+    if (category === 'video') return <Video className="h-3.5 w-3.5" />;
+    if (category === 'image') return <ImageIcon className="h-3.5 w-3.5" />;
+    return <FileText className="h-3.5 w-3.5" />;
+  };
 
   return (
-    <section id="media" className="py-20 bg-[#0e1420] border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
-            <Radio className="w-3.5 h-3.5" />
-            <span>{t('التغطية الإعلامية الميدانية', 'Press & Media Network')}</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            {t('المقابلات والتغطيات الإعلامية', 'Media & Field Interviews')}
-          </h2>
-          <p className="mt-3 text-sm text-slate-400">
-            {t('لقاءات صحفية وتصريحات القنوات عقب المباريات الرسمية', 'Post-match press commentary, pitchside interviews, and news features')}
-          </p>
+    <section id="media" className="border-t border-slate-800 bg-[#0e1420] py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">{t('المقابلات والتغطيات الإعلامية', 'Media & Interviews')}</h2>
         </div>
-
-        {/* Media Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mediaItems.map((item) => (
-            <div 
-              key={item.id}
-              className="bg-slate-900 rounded-2xl p-6 border border-slate-800 hover:border-cyan-500/40 transition-all shadow-xl flex flex-col justify-between"
-            >
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {mediaItems.map(item => (
+            <article key={item.id} className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl transition-all hover:border-cyan-500/40">
               <div>
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-cyan-400 font-bold text-xs flex items-center gap-1.5 font-latin">
-                    {item.mediaType === 'field_interview' ? <Mic className="w-3.5 h-3.5" /> : <Newspaper className="w-3.5 h-3.5" />}
-                    <span>{t(item.sourceNameAr, item.sourceNameEn)}</span>
-                  </span>
-                  {item.date && (
-                    <span className="text-[11px] text-slate-500 font-latin">{item.date}</span>
-                  )}
-                </div>
-
-                <h3 className="text-lg font-bold text-white mb-2">
-                  {t(item.titleAr, item.titleEn)}
-                </h3>
-
-                {item.descriptionAr && (
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {t(item.descriptionAr, item.descriptionEn || '')}
-                  </p>
-                )}
+                {item.coverUrl && <img src={item.coverUrl} alt={item.titleEn || item.titleAr} className="mb-5 max-h-64 w-full rounded-xl object-cover" />}
+                <span className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-bold text-cyan-400">
+                  {iconFor(item.category)}{item.category}
+                </span>
+                <h3 className="mb-2 text-lg font-bold text-white">{t(item.titleAr, item.titleEn)}</h3>
+                {(item.contentAr || item.contentEn) && <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-300">{t(item.contentAr, item.contentEn)}</p>}
               </div>
-
-              {item.url && (
-                <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    <span>{t('مشاهدة التغطية الأصلية', 'View Full Media Source')}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
+              {item.externalUrl && (
+                <div className="mt-6 flex justify-end border-t border-slate-800 pt-4">
+                  <a href={item.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:text-cyan-300">
+                    {t('فتح المصدر', 'Open source')}<ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
               )}
-            </div>
+            </article>
           ))}
         </div>
-
       </div>
     </section>
   );

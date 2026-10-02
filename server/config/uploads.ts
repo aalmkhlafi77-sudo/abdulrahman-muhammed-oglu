@@ -30,3 +30,4 @@ export const getUploadConfig = (): UploadConfig | null => {
 };
 
 export const storedImageName = (value: string): boolean => /^[a-f0-9]{32}\.(jpg|png|webp)$/.test(value);
+export const storedDocumentName = (value: string): boolean => /^[a-f0-9]{32}\.pdf$/.test(value);

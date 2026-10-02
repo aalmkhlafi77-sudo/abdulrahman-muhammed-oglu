@@ -1,26 +1,18 @@
 import type {
-  ContactInquiry,
-  DocumentCV,
-  MediaItem,
   SEOConfig,
   SectionConfig,
   ThemeConfig,
 } from '../types/player';
 import {
-  initialCV,
-  initialMedia,
   initialSections,
   initialSEO,
   initialTheme,
 } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  MEDIA: 'abdurahman_media_v1',
-  CV: 'abdurahman_cv_v1',
   SECTIONS: 'abdurahman_sections_v1',
   THEME: 'abdurahman_theme_v1',
   SEO: 'abdurahman_seo_v1',
-  INQUIRIES: 'abdurahman_inquiries_v1',
 } as const;
 
 const memoryCache: Record<string, unknown> = {};
@@ -62,35 +54,6 @@ export const calculateAge = (dobString: string): number => {
   return age;
 };
 
-/** Compresses base64 image data for the legacy Media editor. */
-export const compressImage = (dataUrl: string, maxDim = 1200, quality = 0.8): Promise<string> => new Promise((resolve) => {
-  if (!dataUrl || !dataUrl.startsWith('data:image')) {
-    resolve(dataUrl);
-    return;
-  }
-
-  const img = new window.Image();
-  img.onload = () => {
-    let { width, height } = img;
-    if (width > maxDim || height > maxDim) {
-      if (width > height) {
-        height = Math.round((height * maxDim) / width);
-        width = maxDim;
-      } else {
-        width = Math.round((width * maxDim) / height);
-        height = maxDim;
-      }
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    resolve(context ? (context.drawImage(img, 0, 0, width, height), canvas.toDataURL('image/jpeg', quality)) : dataUrl);
-  };
-  img.onerror = () => resolve(dataUrl);
-  img.src = dataUrl;
-});
-
 export const parseDriveUrl = (url: string): { embedUrl: string; directUrl: string; fileId?: string } => {
   if (!url) return { embedUrl: '', directUrl: '' };
   const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -110,12 +73,6 @@ export const parseYoutubeUrl = (url: string): string => {
 };
 
 export const DataService = {
-  getMedia: (): MediaItem[] => getStoredData(STORAGE_KEYS.MEDIA, initialMedia),
-  updateMedia: (data: MediaItem[]): void => setStoredData(STORAGE_KEYS.MEDIA, data),
-
-  getCV: (): DocumentCV => getStoredData(STORAGE_KEYS.CV, initialCV),
-  updateCV: (data: DocumentCV): void => setStoredData(STORAGE_KEYS.CV, data),
-
   getSections: (): SectionConfig[] => getStoredData<SectionConfig[]>(STORAGE_KEYS.SECTIONS, initialSections)
     .sort((a, b) => a.sortOrder - b.sortOrder),
   updateSections: (data: SectionConfig[]): void => setStoredData(STORAGE_KEYS.SECTIONS, data),
@@ -125,23 +82,5 @@ export const DataService = {
 
   getSEO: (): SEOConfig => getStoredData(STORAGE_KEYS.SEO, initialSEO),
   updateSEO: (data: SEOConfig): void => setStoredData(STORAGE_KEYS.SEO, data),
-
-  getInquiries: (): ContactInquiry[] => getStoredData(STORAGE_KEYS.INQUIRIES, []),
-  addInquiry: (inquiry: Omit<ContactInquiry, 'id' | 'createdAt' | 'read'>): void => {
-    const list = DataService.getInquiries();
-    const newInquiry: ContactInquiry = {
-      ...inquiry,
-      id: `inq-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      read: false,
-    };
-    setStoredData(STORAGE_KEYS.INQUIRIES, [newInquiry, ...list]);
-  },
-  markInquiryRead: (id: string): void => {
-    setStoredData(STORAGE_KEYS.INQUIRIES, DataService.getInquiries().map(item => item.id === id ? { ...item, read: true } : item));
-  },
-  deleteInquiry: (id: string): void => {
-    setStoredData(STORAGE_KEYS.INQUIRIES, DataService.getInquiries().filter(item => item.id !== id));
-  },
 
 };

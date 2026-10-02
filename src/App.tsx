@@ -26,6 +26,7 @@ import { AdminStats } from './components/admin/AdminStats';
 import { AdminVideos } from './components/admin/AdminVideos';
 import { AdminMediaLibrary } from './components/admin/AdminMediaLibrary';
 import { AdminMediaInterviews } from './components/admin/AdminMediaInterviews';
+import { AdminCV } from './components/admin/AdminCV';
 import { AdminInquiries } from './components/admin/AdminInquiries';
 import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding';
 
@@ -58,6 +59,7 @@ function AppContent() {
       case 'videos': return <AdminVideos />;
       case 'photos': return <AdminMediaLibrary />;
       case 'media': return <AdminMediaInterviews />;
+      case 'cv': return <AdminCV />;
       case 'inquiries': return <AdminInquiries />;
       case 'security_branding': return <AdminSecurityBranding />;
       default: return <AdminDashboard />;

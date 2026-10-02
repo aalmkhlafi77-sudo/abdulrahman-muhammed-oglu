@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
+import { getInquiries } from '../../services/inquiriesApi';
+import type { ContactInquiry } from '../../types/player';
 import { useStructuredContent } from '../../context/StructuredContentContext';
 import { usePhotos } from '../../context/PhotoContext';
 import { Video, Image, Briefcase, Mail } from 'lucide-react';
@@ -9,7 +10,9 @@ export const AdminDashboard: React.FC = () => {
   const { t } = useLanguage();
   const { videos, clubs, achievements } = useStructuredContent();
   const { photos } = usePhotos();
-  const inquiries = DataService.getInquiries();
+  const [inquiries, setInquiries] = useState<ContactInquiry[]>([]);
+
+  useEffect(() => { void getInquiries().then(setInquiries).catch(error => console.warn('Could not load inquiry count:', error)); }, []);
 
   return (
     <div className="space-y-8">
@@ -59,7 +62,7 @@ export const AdminDashboard: React.FC = () => {
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase font-latin">{t('رسائل الكشافين', 'Scout Inquiries')}</span>
             <h3 className="text-2xl font-extrabold text-white mt-1">{inquiries.length}</h3>
-            <span className="text-[11px] text-emerald-400 mt-1 block font-latin">{inquiries.filter(i => !i.read).length} {t('جديدة', 'unread')}</span>
+            <span className="text-[11px] text-emerald-400 mt-1 block font-latin">{inquiries.filter(i => !i.readAt).length} {t('جديدة', 'unread')}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <Mail className="w-6 h-6" />

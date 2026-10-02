@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, calculateAge } from '../../services/dataService';
+import { calculateAge } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { useStructuredContent } from '../../context/StructuredContentContext';
-import { FileText, Download, Printer, ExternalLink, Check, Eye } from 'lucide-react';
+import { FileText, Download, Printer } from 'lucide-react';
+
+interface OfficialCv { url: string; }
 
 export const PlayerCV: React.FC = () => {
   const { t, lang } = useLanguage();
   const { player } = usePlayerInfo();
   const { clubs } = useStructuredContent();
-  const cvDoc = DataService.getCV();
+  const [officialCv, setOfficialCv] = useState<OfficialCv | null>(null);
   const [cvLang, setCvLang] = useState<'ar' | 'en'>(lang);
   const age = calculateAge(player.dob);
+
+  useEffect(() => {
+    fetch('/api/documents/cv')
+      .then(async response => response.ok ? await response.json() as OfficialCv | null : null)
+      .then(setOfficialCv)
+      .catch(error => console.warn('Could not load official CV PDF:', error));
+  }, []);
 
   const handlePrintCV = () => {
     window.print();
@@ -68,19 +77,12 @@ export const PlayerCV: React.FC = () => {
               <span>{t('طباعة السيرة', 'Print Resume')}</span>
             </button>
 
-            <a
-              href={cvDoc.fileUrl !== '#' ? cvDoc.fileUrl : '#'}
-              onClick={(e) => {
-                if (cvDoc.fileUrl === '#') {
-                  e.preventDefault();
-                  handlePrintCV();
-                }
-              }}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 text-xs font-bold shadow-lg hover:shadow-cyan-500/20 transition-all flex items-center gap-2"
-            >
-              <Download className="w-4 h-4 fill-slate-950" />
-              <span>{t('تحميل ملف PDF', 'Download PDF')}</span>
-            </a>
+            {officialCv?.url && (
+              <a href={officialCv.url} download="official-cv.pdf" className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-lg transition-all hover:shadow-cyan-500/20">
+                <Download className="h-4 w-4 fill-slate-950" />
+                <span>{t('تنزيل السيرة الرسمية PDF', 'Download Official PDF')}</span>
+              </a>
+            )}
           </div>
 
         </div>

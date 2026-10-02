@@ -7,8 +7,6 @@ import {
   PerformanceStat, 
   VideoHighlight, 
   PhotoItem, 
-  MediaItem, 
-  DocumentCV, 
   SectionConfig, 
   ThemeConfig, 
   SEOConfig,
@@ -409,44 +407,6 @@ export const generateInitialPhotos = (): PhotoItem[] => {
 };
 
 export const initialPhotos: PhotoItem[] = generateInitialPhotos();
-
-export const initialMedia: MediaItem[] = [
-  {
-    id: 'media-1',
-    titleAr: 'لقاء ميداني عقب المباراة وإبراز الأداء الجماهيري',
-    titleEn: 'Post-Match Pitchside Interview – Key Match Reflections',
-    sourceNameAr: 'التغطية الإعلامية الرياضية',
-    sourceNameEn: 'Sports Pitch Coverage',
-    date: '2024-02-15',
-    mediaType: 'field_interview',
-    url: 'https://youtube.com',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800&auto=format&fit=crop',
-    descriptionAr: 'حديث عبدالرحمن عن مجريات اللقاء التكتيكي وتحقيقه لجائزة أفضل لاعب في المباراة.',
-    descriptionEn: 'Abdurahman discussing tactical adjustments and earning Man of the Match recognition.'
-  },
-  {
-    id: 'media-2',
-    titleAr: 'تقرير صحفي عن المواهب الشابة في الدوري التركي والقبرصي',
-    titleEn: 'Press Feature: Rising Talents in Turkish & Cypriot Leagues',
-    sourceNameAr: 'الصحافة الرياضية',
-    sourceNameEn: 'Football Press Network',
-    date: '2023-11-10',
-    mediaType: 'press',
-    url: 'https://google.com',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=800&auto=format&fit=crop',
-    descriptionAr: 'تسليط الضوء على قدرات عبدالرحمن في مرونة مراكز خط الوسط والجناح الأيسر.',
-    descriptionEn: 'Feature article analyzing Abdurahman’s box-to-box engine and positional flexibility.'
-  }
-];
-
-export const initialCV: DocumentCV = {
-  id: 'cv-default',
-  titleAr: 'السيرة الذاتية الرياضية الرسمية – عبدالرحمن محمد أوغلو',
-  titleEn: 'Official Sports CV – Abdurahman Muhammed Oglu',
-  language: 'both',
-  fileUrl: '#',
-  updatedAt: '2026-09-30'
-};
 
 export const initialSections: SectionConfig[] = [
   { id: 'sec-hero', key: 'hero', titleAr: 'الرئيسية', titleEn: 'Hero Banner', enabled: true, sortOrder: 1 },
