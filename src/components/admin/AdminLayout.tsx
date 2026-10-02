@@ -17,8 +17,13 @@ import {
   Menu,
   X,
   AlertCircle,
-  Settings
+  Settings,
+  AtSign,
+  Eye,
+  EyeOff,
+  Loader2,
 } from 'lucide-react';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 interface AdminLayoutProps {
   onCloseAdmin: () => void;
@@ -27,11 +32,15 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children }) => {
   const { t } = useLanguage();
+  const { branding } = useSiteSettings();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
   const [email, setEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginLogoFailed, setLoginLogoFailed] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
@@ -57,18 +66,26 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: passcode }),
-    });
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: passcode }),
+      });
 
-    if (response.ok) {
-      setIsAuthenticated(true);
-      setAuthError(false);
-    } else {
+      if (response.ok) {
+        setIsAuthenticated(true);
+        setAuthError(false);
+      } else {
+        setAuthError(true);
+      }
+    } catch {
       setAuthError(true);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -99,64 +116,83 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
 
   if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#0b0f17] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">{t('لوحة إدارة ملف اللاعب', 'Admin Portal Login')}</h2>
-            <p className="text-xs text-slate-400 mt-1">
-              {t('أدخل رمز الدخول لإدارة البيانات والميديا', 'Enter access PIN to manage portfolio & media')}
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">{t('البريد الإلكتروني', 'Email')}</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                autoComplete="username"
-                placeholder={t('البريد الإلكتروني للمدير', 'Admin email')}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-latin"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">{t('كلمة المرور', 'Password')}</label>
-              <input 
-                type="password" 
-                value={passcode}
-                onChange={e => setPasscode(e.target.value)}
-                autoComplete="current-password"
-                placeholder={t('أدخل كلمة المرور', 'Enter password')}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-latin text-center tracking-widest"
-              />
+      <div className="admin-login-shell fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
+        <div className="admin-login-frame w-full max-w-[440px]">
+          <div className="admin-login-card rounded-[calc(1.5rem-1px)] border border-slate-700/70 px-5 py-7 shadow-2xl sm:px-9 sm:py-9">
+            <div className="mb-7 flex flex-col items-center text-center">
+              {branding.showInAdminLogin && branding.logoUrl && branding.logoStatus !== 'removed' && !loginLogoFailed ? (
+                <img src={branding.logoUrl} alt={t('شعار الموقع', 'Site logo')} onError={() => setLoginLogoFailed(true)} className="mb-5 h-12 max-w-[180px] object-contain" />
+              ) : (
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-300 shadow-inner shadow-cyan-400/10">
+                  <Lock className="h-6 w-6" aria-hidden="true" />
+                </div>
+              )}
+              <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{t('لوحة إدارة ملف اللاعب', 'Player Portfolio Admin')}</h2>
+              <p className="mt-2 text-xs leading-5 text-slate-400">{t('تسجيل الدخول إلى لوحة إدارة المحتوى', 'Sign in to manage portfolio content')}</p>
             </div>
 
-            {authError && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{t('بيانات الدخول غير صحيحة', 'Invalid email or password')}</span>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="admin-login-field">
+                <AtSign className="admin-login-field__icon" aria-hidden="true" />
+                <label htmlFor="admin-login-email" className="admin-login-field__label">{t('البريد الإلكتروني', 'Email')}</label>
+                <input
+                  id="admin-login-email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="username"
+                  dir="ltr"
+                  required
+                  className="admin-login-field__input"
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400 transition-colors"
-            >
-              {t('تسجيل الدخول', 'AUTHENTICATE ACCESS')}
-            </button>
+              <div className="admin-login-field">
+                <Lock className="admin-login-field__icon" aria-hidden="true" />
+                <label htmlFor="admin-login-password" className="admin-login-field__label">{t('كلمة المرور', 'Password')}</label>
+                <input
+                  id="admin-login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={passcode}
+                  onChange={e => setPasscode(e.target.value)}
+                  autoComplete="current-password"
+                  dir="ltr"
+                  required
+                  className="admin-login-field__input pe-14"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(visible => !visible)}
+                  className="admin-login-password-toggle"
+                  aria-label={showPassword ? t('إخفاء كلمة المرور', 'Hide password') : t('إظهار كلمة المرور', 'Show password')}
+                  title={showPassword ? t('إخفاء كلمة المرور', 'Hide password') : t('إظهار كلمة المرور', 'Show password')}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                </button>
+              </div>
 
-            <button
-              type="button"
-              onClick={onCloseAdmin}
-              className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-            >
-              {t('العودة إلى الموقع الرئيسي', 'Return to Public Portfolio')}
-            </button>
-          </form>
+              {authError && (
+                <div role="alert" className="admin-login-error flex items-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-xs text-red-200">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-red-300" aria-hidden="true" />
+                  <span>{t('بيانات الدخول غير صحيحة', 'Invalid email or password')}</span>
+                </div>
+              )}
+
+              <button type="submit" disabled={isLoggingIn} className="admin-login-submit">
+                {isLoggingIn && <Loader2 className="admin-login-spinner h-4 w-4" aria-hidden="true" />}
+                <span>{isLoggingIn ? t('جارٍ تسجيل الدخول...', 'Signing in...') : t('تسجيل الدخول', 'SIGN IN')}</span>
+              </button>
+
+              <button type="button" onClick={onCloseAdmin} className="admin-login-return">
+                {t('العودة إلى الموقع الرئيسي', 'Return to Public Portfolio')}
+              </button>
+            </form>
+
+            <div className="mt-6 flex items-center justify-center gap-2 border-t border-slate-700/60 pt-5 text-[11px] text-slate-500">
+              <Lock className="h-3.5 w-3.5 text-cyan-700" aria-hidden="true" />
+              <span>{t('جلسة الإدارة محمية وآمنة', 'Secure administrator session')}</span>
+            </div>
+          </div>
         </div>
       </div>
     );
