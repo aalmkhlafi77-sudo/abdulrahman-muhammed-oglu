@@ -42,6 +42,8 @@ export interface PlayerInfo {
   objectiveEn: string;
   educationAr: string;
   educationEn: string;
+  languages?: PlayerLanguage[];
+  attributes?: PersonalAttribute[];
   
   // Imagery
   heroImage: string;

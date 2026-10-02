@@ -33,26 +33,17 @@ import { AdminSEO } from './components/admin/AdminSEO';
 import { AdminSecurityBranding } from './components/admin/AdminSecurityBranding';
 
 import { VideoHighlight } from './types/player';
-import { DataService } from './services/dataService';
 import { PlayerInfoProvider } from './context/PlayerInfoContext';
 import { StructuredContentProvider } from './context/StructuredContentContext';
 import { PhotoProvider } from './context/PhotoContext';
+import { useStructuredContent } from './context/StructuredContentContext';
 
-export default function App() {
+function AppContent() {
   const [activeVideo, setActiveVideo] = useState<VideoHighlight | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
-  const [, setSyncVersion] = useState(0);
-
-  React.useEffect(() => {
-    const handleSync = () => {
-      setSyncVersion(v => v + 1);
-    };
-    window.addEventListener('portfolio_server_data_synced', handleSync);
-    return () => window.removeEventListener('portfolio_server_data_synced', handleSync);
-  }, []);
+  const { videos } = useStructuredContent();
 
   const handleOpenOfficialHighlights = () => {
-    const videos = DataService.getVideos();
     const official = videos.find(v => v.featured) || videos[0];
     if (official) {
       setActiveVideo(official);
@@ -79,10 +70,6 @@ export default function App() {
   };
 
   return (
-    <LanguageProvider>
-      <PlayerInfoProvider>
-      <StructuredContentProvider>
-      <PhotoProvider>
       <div className="min-h-screen bg-[#0b0f17] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
         
         {/* Public Header Navbar */}
@@ -147,8 +134,18 @@ export default function App() {
         )}
 
       </div>
-      </PhotoProvider>
-      </StructuredContentProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <PlayerInfoProvider>
+        <StructuredContentProvider>
+          <PhotoProvider>
+            <AppContent />
+          </PhotoProvider>
+        </StructuredContentProvider>
       </PlayerInfoProvider>
     </LanguageProvider>
   );

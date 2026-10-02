@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Achievement, ClubExperience, PerformanceStat, VideoHighlight } from '../types/player';
-import { DataService } from '../services/dataService';
 
 interface StructuredContent {
   clubs: ClubExperience[];
@@ -39,14 +38,9 @@ export const StructuredContentProvider: React.FC<{ children: React.ReactNode }> 
     setAchievements(achievementRows as Achievement[]);
     setStats(statRows as PerformanceStat[]);
     setVideos(videoRows as VideoHighlight[]);
-    DataService.setMysqlCollections({ clubs: clubRows as ClubExperience[], achievements: achievementRows as Achievement[], stats: statRows as PerformanceStat[], videos: videoRows as VideoHighlight[] });
   };
 
   useEffect(() => { void refresh().catch((error) => console.warn('Could not load structured content:', error)); }, []);
-  useEffect(() => {
-    DataService.setMysqlCollections({ clubs, achievements, stats, videos });
-    window.dispatchEvent(new Event('portfolio_server_data_synced'));
-  }, [clubs, achievements, stats, videos]);
 
   const value = useMemo(() => ({ clubs, career, achievements, stats, videos, setClubs, setCareer, setAchievements, setStats, setVideos, refresh }), [clubs, career, achievements, stats, videos]);
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;

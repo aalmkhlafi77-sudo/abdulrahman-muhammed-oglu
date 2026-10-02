@@ -1,14 +1,12 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService, calculateAge } from '../../services/dataService';
+import { calculateAge } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Target, UserCheck, Languages, Check, Compass, Shield, Clock, Zap, Users, Brain, RefreshCw, MessageSquare } from 'lucide-react';
 
 export const PlayerProfile: React.FC = () => {
   const { t } = useLanguage();
-  const { player } = usePlayerInfo();
-  const languages = DataService.getLanguages();
-  const attributes = DataService.getAttributes();
+  const { player, languages, attributes } = usePlayerInfo();
   const age = calculateAge(player.dob);
 
   // Map icon names safely

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { DataService } from '../../services/dataService';
 import { 
   LayoutDashboard, 
   User, 
@@ -20,9 +19,6 @@ import {
   ArrowLeft,
   Menu,
   X,
-  Download,
-  Upload,
-  RotateCcw,
   AlertCircle,
   Settings
 } from 'lucide-react';
@@ -41,7 +37,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
   const [authError, setAuthError] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   React.useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -83,36 +78,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setIsAuthenticated(false);
-  };
-
-  const handleExportJSON = () => {
-    const jsonStr = DataService.exportAllDataJSON();
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `abdurahman_portfolio_backup_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const content = evt.target?.result as string;
-      if (content) {
-        const success = DataService.importAllDataJSON(content);
-        if (success) {
-          alert(t('تم استيراد النسخة الاحتياطية بنجاح!', 'Backup restored successfully!'));
-          window.location.reload();
-        } else {
-          alert(t('فشل استيراد الملف. تأكد من صحة النسخة الاحتياطية.', 'Failed to restore backup file. Invalid format.'));
-        }
-      }
-    };
-    reader.readAsText(file);
   };
 
   const menuItems = [
@@ -260,58 +225,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
           </div>
         </div>
 
-        {/* Global Publish Button */}
-        <div className="p-3 border-b border-slate-800 bg-cyan-950/40">
-          <button
-            type="button"
-            onClick={async () => {
-              const success = await DataService.forcePushToServer();
-              if (success) {
-                alert(t('تم نشر وتنسيق جميع البيانات والميديا بنجاح لكافة الأجهزة والهواتف!', 'Published all media & data globally across all devices!'));
-              } else {
-                alert(t('جاري الحفظ والمزامنة السريعة...', 'Syncing with server...'));
-              }
-            }}
-            className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
-          >
-            <Globe className="w-4 h-4" />
-            <span>{t('نشر المحتوى لجميع الهواتف', 'PUBLISH TO ALL DEVICES')}</span>
-          </button>
-        </div>
-
-        {/* Backup & Tools Bar */}
-        <div className="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between gap-1 text-[11px]">
-          <button
-            type="button"
-            onClick={handleExportJSON}
-            className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold flex items-center justify-center gap-1 transition-colors"
-            title={t('تصدير نسخة احتياطية JSON', 'Export JSON Backup')}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{t('تصدير', 'Export')}</span>
-          </button>
-
-          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors">
-            <Upload className="w-3.5 h-3.5" />
-            <span>{t('استرجاع', 'Import')}</span>
-            <input 
-              type="file" 
-              accept=".json" 
-              onChange={handleImportJSON} 
-              className="hidden" 
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
-            title={t('استعادة الضبط الافتراضي', 'Reset to Defaults')}
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
         {/* Navigation Items List */}
         <nav className="p-3 space-y-1 flex-1 overflow-y-auto no-scrollbar">
           {menuItems.map((item) => (
@@ -376,39 +289,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
           </button>
         </div>
 
-        {/* Backup & Tools Bar */}
-        <div className="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between gap-1 text-[11px]">
-          <button
-            type="button"
-            onClick={handleExportJSON}
-            className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold flex items-center justify-center gap-1 transition-colors"
-            title={t('تصدير نسخة احتياطية JSON', 'Export JSON Backup')}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{t('تصدير', 'Export')}</span>
-          </button>
-
-          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors">
-            <Upload className="w-3.5 h-3.5" />
-            <span>{t('استرجاع', 'Import')}</span>
-            <input 
-              type="file" 
-              accept=".json" 
-              onChange={handleImportJSON} 
-              className="hidden" 
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400"
-            title={t('استعادة الضبط الافتراضي', 'Reset to Defaults')}
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
         {/* Navigation Items List */}
         <nav className="p-3 space-y-1 flex-1 overflow-y-auto no-scrollbar">
           {menuItems.map((item) => (
@@ -449,44 +329,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onCloseAdmin, children
       <main className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 bg-[#0e1420]">
         {children(activeTab)}
       </main>
-
-      {/* Manual Reset to Default Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 text-red-400 font-bold text-base">
-              <RotateCcw className="w-5 h-5 shrink-0" />
-              <h3>{t('تأكيد استعادة البيانات الافتراضية', 'Confirm Reset to Default Data')}</h3>
-            </div>
-            
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {t(
-                'هذا الإجراء سيقوم بحذف جميع التعديلات المحفوظة والصور المرفوعة وإعادة المحتوى إلى البيانات الافتراضية الأولى. ننصح بتصدير نسخة احتياطية أولاً.',
-                'This manual action will reset all your custom edits and uploaded images back to the initial default seed data. We recommend exporting a JSON backup first.'
-              )}
-            </p>
-
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  DataService.resetAll();
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-xs hover:bg-red-600 transition-colors"
-              >
-                {t('نعم، استعادة الافتراضي', 'YES, RESET ALL DATA')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs hover:bg-slate-700 transition-colors"
-              >
-                {t('إلغاء', 'Cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

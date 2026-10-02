@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { DataService, calculateAge } from '../../services/dataService';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
+import { useStructuredContent } from '../../context/StructuredContentContext';
 import { FileText, Download, Printer, ExternalLink, Check, Eye } from 'lucide-react';
 
 export const PlayerCV: React.FC = () => {
   const { t, lang } = useLanguage();
   const { player } = usePlayerInfo();
-  const clubs = DataService.getClubs();
+  const { clubs } = useStructuredContent();
   const cvDoc = DataService.getCV();
   const [cvLang, setCvLang] = useState<'ar' | 'en'>(lang);
   const age = calculateAge(player.dob);
