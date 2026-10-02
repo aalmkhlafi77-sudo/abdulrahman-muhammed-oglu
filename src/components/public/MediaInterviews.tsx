@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { getPublicMedia, MediaItem } from '../../services/mediaApi';
+import { MediaCover } from '../common/MediaCover';
 import { ExternalLink, FileText, Image as ImageIcon, Mic, Video } from 'lucide-react';
 
 export const MediaInterviews: React.FC = () => {
@@ -30,7 +31,7 @@ export const MediaInterviews: React.FC = () => {
           {mediaItems.map(item => (
             <article key={item.id} className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl transition-all hover:border-cyan-500/40">
               <div>
-                {item.coverUrl && <img src={item.coverUrl} alt={item.titleEn || item.titleAr} className="mb-5 max-h-64 w-full rounded-xl object-cover" />}
+                <MediaCover category={item.category} coverUrl={item.coverUrl} alt={item.titleEn || item.titleAr} className="mb-5 h-48 w-full rounded-xl sm:h-56 md:h-64" />
                 <span className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-bold text-cyan-400">
                   {iconFor(item.category)}{item.category}
                 </span>

@@ -1,11 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { MediaPicker } from '../common/MediaPicker';
+import { MediaCover } from '../common/MediaCover';
 import { getAssets } from '../../services/photoApi';
 import { createMedia, deleteMedia, getAdminMedia, MediaCategory, MediaInput, MediaItem, updateMedia } from '../../services/mediaApi';
 import { Edit, ExternalLink, Eye, EyeOff, Plus, Trash2, Upload } from 'lucide-react';
 
 type EditorState = MediaInput & { id: string | null; coverUrl: string };
+
+const toMediaInput = (item: MediaItem | EditorState): MediaInput => ({
+  titleAr: item.titleAr,
+  titleEn: item.titleEn,
+  category: item.category,
+  contentAr: item.contentAr,
+  contentEn: item.contentEn,
+  coverAssetId: item.coverAssetId,
+  externalUrl: item.externalUrl,
+  published: item.published,
+  sortOrder: item.sortOrder,
+});
 
 const newEditor = (category: MediaCategory, sortOrder: number): EditorState => ({
   id: null, titleAr: '', titleEn: '', category, contentAr: '', contentEn: '', coverAssetId: null,
@@ -30,8 +43,8 @@ export const AdminMediaInterviews: React.FC = () => {
     setBusy(true);
     setError('');
     try {
-      const { id, coverUrl: _coverUrl, ...payload } = editor;
-      if (id) await updateMedia(id, payload);
+      const payload = toMediaInput(editor);
+      if (editor.id) await updateMedia(editor.id, payload);
       else await createMedia(payload);
       await refresh();
       setEditor(null);
@@ -42,8 +55,7 @@ export const AdminMediaInterviews: React.FC = () => {
 
   const togglePublished = async (item: MediaItem) => {
     try {
-      const { id, coverUrl: _coverUrl, ...payload } = { ...item, published: !item.published };
-      await updateMedia(id, payload);
+      await updateMedia(item.id, toMediaInput({ ...item, published: !item.published }));
       await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not update media'); }
   };
@@ -60,8 +72,8 @@ export const AdminMediaInterviews: React.FC = () => {
     const current = items[index];
     const other = items[target];
     try {
-      const currentInput: MediaInput = { ...current, sortOrder: other.sortOrder };
-      const otherInput: MediaInput = { ...other, sortOrder: current.sortOrder };
+      const currentInput = toMediaInput({ ...current, sortOrder: other.sortOrder });
+      const otherInput = toMediaInput({ ...other, sortOrder: current.sortOrder });
       await Promise.all([updateMedia(current.id, currentInput), updateMedia(other.id, otherInput)]);
       await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not reorder media'); }
@@ -105,7 +117,7 @@ export const AdminMediaInterviews: React.FC = () => {
         <div className="space-y-3">
           {items.map((item, index) => (
             <article key={item.id} className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:flex-row sm:items-center">
-              {item.coverUrl && <img src={item.coverUrl} alt="" className="h-20 w-28 rounded-lg object-cover" />}
+              <MediaCover category={item.category} coverUrl={item.coverUrl} alt={item.titleEn || item.titleAr} className="h-20 w-28 shrink-0 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-bold text-white">{item.titleAr}</h2>
@@ -138,15 +150,17 @@ export const AdminMediaInterviews: React.FC = () => {
               <label className="space-y-1 text-xs text-slate-300">{t('العنوان بالإنجليزية', 'English title')}<input maxLength={255} value={editor.titleEn} onChange={e => setEditor({ ...editor, titleEn: e.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white" /></label>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs text-slate-300">{t('الفئة', 'Category')}<select value={editor.category} onChange={e => setEditor({ ...editor, category: e.target.value as MediaCategory })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">{categories.map(category => <option key={category} value={category}>{categoryName(category)}</option>)}</select></label>
-              <label className="space-y-1 text-xs text-slate-300">{t('الرابط الخارجي', 'External URL')}<input type="url" maxLength={1000} value={editor.externalUrl} onChange={e => setEditor({ ...editor, externalUrl: e.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white" placeholder="https://" /></label>
+              <label className="space-y-1 text-xs text-slate-300">{t('الفئة', 'Category')}<select value={editor.category} onChange={e => { const category = e.target.value as MediaCategory; setEditor({ ...editor, category, externalUrl: category === 'image' ? '' : editor.externalUrl }); }} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">{categories.map(category => <option key={category} value={category}>{categoryName(category)}</option>)}</select></label>
+              {editor.category !== 'image' && (
+                <label className="space-y-1 text-xs text-slate-300">{t('الرابط الخارجي', 'External URL')}{editor.category === 'video' ? ' *' : ''}<input type="url" required={editor.category === 'video'} maxLength={1000} value={editor.externalUrl} onChange={e => setEditor({ ...editor, externalUrl: e.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white" placeholder="https://" /></label>
+              )}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-xs text-slate-300">{t('المحتوى بالعربية', 'Arabic content')}<textarea rows={4} maxLength={30000} value={editor.contentAr} onChange={e => setEditor({ ...editor, contentAr: e.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white" /></label>
               <label className="space-y-1 text-xs text-slate-300">{t('المحتوى بالإنجليزية', 'English content')}<textarea rows={4} maxLength={30000} value={editor.contentEn} onChange={e => setEditor({ ...editor, contentEn: e.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-white" /></label>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {editor.coverUrl && <img src={editor.coverUrl} alt="" className="h-14 w-20 rounded object-cover" />}
+              <MediaCover category={editor.category} coverUrl={editor.coverUrl} alt={editor.titleEn || editor.titleAr} className="h-14 w-20 rounded" />
               <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200"><Upload className="h-4 w-4" />{t('اختيار غلاف', 'Choose cover')}</button>
               {editor.coverAssetId && <button type="button" onClick={() => setEditor({ ...editor, coverAssetId: null, coverUrl: '' })} className="text-xs text-red-300">{t('إزالة الغلاف', 'Remove cover')}</button>}
               <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={editor.published} onChange={e => setEditor({ ...editor, published: e.target.checked })} />{t('منشور', 'Published')}</label>
@@ -162,7 +176,7 @@ export const AdminMediaInterviews: React.FC = () => {
 
       {pickerOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/90 p-4">
-          <div className="w-full max-w-2xl"><MediaPicker value={editor?.coverUrl} onChange={url => void chooseCover(url)} onClose={() => setPickerOpen(false)} title={t('اختيار صورة الغلاف', 'Choose cover image')} /></div>
+          <div className="w-full max-w-2xl"><MediaPicker allowExternalUrl={false} value={editor?.coverUrl} onChange={url => void chooseCover(url)} onClose={() => setPickerOpen(false)} title={t('اختيار صورة الغلاف', 'Choose cover image')} /></div>
         </div>
       )}
     </div>

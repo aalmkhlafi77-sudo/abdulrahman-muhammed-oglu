@@ -18,6 +18,18 @@ interface MediaRow extends RowDataPacket {
   sort_order: number;
 }
 
+interface ValidatedMediaInput {
+  titleAr: string;
+  titleEn: string;
+  category: string;
+  contentAr: string;
+  contentEn: string;
+  coverAssetId: number | null;
+  externalUrl: string;
+  published: boolean;
+  sortOrder: number;
+}
+
 const router = Router();
 const categories = new Set(['interview', 'video', 'article', 'image']);
 const fields = new Set(['titleAr', 'titleEn', 'category', 'contentAr', 'contentEn', 'coverAssetId', 'externalUrl', 'published', 'sortOrder']);
@@ -42,7 +54,7 @@ const selectMedia = async (id?: number, publishedOnly = false): Promise<MediaRow
   return rows;
 };
 
-const validateInput = (body: unknown): Record<string, unknown> | null => {
+const validateInput = (body: unknown): ValidatedMediaInput | null => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
   const value = body as Record<string, unknown>;
   if (Object.keys(value).some(key => !fields.has(key))) return null;
@@ -51,17 +63,39 @@ const validateInput = (body: unknown): Record<string, unknown> | null => {
   if (typeof value.category !== 'string' || !categories.has(value.category)) return null;
   if (typeof value.contentAr !== 'string' || value.contentAr.length > 30000) return null;
   if (typeof value.contentEn !== 'string' || value.contentEn.length > 30000) return null;
-  if (value.coverAssetId !== null && (!Number.isSafeInteger(Number(value.coverAssetId)) || Number(value.coverAssetId) <= 0)) return null;
+  let coverAssetId: number | null = null;
+  if (value.coverAssetId !== null) {
+    if (typeof value.coverAssetId === 'number') {
+      coverAssetId = value.coverAssetId;
+    } else if (typeof value.coverAssetId === 'string' && /^\d+$/.test(value.coverAssetId)) {
+      coverAssetId = Number(value.coverAssetId);
+    } else {
+      return null;
+    }
+    if (!Number.isSafeInteger(coverAssetId) || coverAssetId <= 0) return null;
+  }
   if (typeof value.externalUrl !== 'string' || value.externalUrl.length > 1000) return null;
-  if (value.externalUrl) {
-    try { if (!['http:', 'https:'].includes(new URL(value.externalUrl).protocol)) return null; } catch { return null; }
+  const externalUrl = value.externalUrl.trim();
+  if (value.category === 'video' && !externalUrl) return null;
+  if (externalUrl) {
+    try { if (!['http:', 'https:'].includes(new URL(externalUrl).protocol)) return null; } catch { return null; }
   }
   if (typeof value.published !== 'boolean') return null;
   if (!Number.isSafeInteger(value.sortOrder) || Number(value.sortOrder) < 0 || Number(value.sortOrder) > 1000000) return null;
-  return { ...value, titleAr: value.titleAr.trim(), titleEn: value.titleEn.trim(), externalUrl: value.externalUrl.trim() };
+  return {
+    titleAr: value.titleAr.trim(),
+    titleEn: value.titleEn.trim(),
+    category: value.category,
+    contentAr: value.contentAr,
+    contentEn: value.contentEn,
+    coverAssetId,
+    externalUrl,
+    published: value.published,
+    sortOrder: value.sortOrder as number,
+  };
 };
 
-const hasValidCover = async (assetId: unknown): Promise<boolean> => {
+const hasValidCover = async (assetId: number | null): Promise<boolean> => {
   if (assetId === null) return true;
   const [rows] = await db.query<RowDataPacket[]>('SELECT id FROM assets WHERE id = ? AND type = ? LIMIT 1', [assetId, 'image']);
   return rows.length > 0;

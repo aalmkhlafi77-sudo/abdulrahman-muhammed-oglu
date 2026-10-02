@@ -9,13 +9,15 @@ interface MediaPickerProps {
   onChange: (url: string) => void;
   onClose?: () => void;
   title?: string;
+  allowExternalUrl?: boolean;
 }
 
 export const MediaPicker: React.FC<MediaPickerProps> = ({
   value = '',
   onChange,
   onClose,
-  title
+  title,
+  allowExternalUrl = true,
 }) => {
   const { t, lang } = useLanguage();
   const fileInputId = useId();
@@ -27,6 +29,10 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [inputUrl, setInputUrl] = useState(value);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!allowExternalUrl && activeTab === 'url') setActiveTab('upload');
+  }, [allowExternalUrl, activeTab]);
 
   useEffect(() => {
     let active = true;
@@ -121,16 +127,18 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
           <span>{t('مكتبة الوسائط', 'Media Library')}</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('url')}
-          className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
-            activeTab === 'url' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <LinkIcon className="w-4 h-4" />
-          <span>{t('رابط خارجي', 'External URL')}</span>
-        </button>
+        {allowExternalUrl && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('url')}
+            className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+              activeTab === 'url' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LinkIcon className="w-4 h-4" />
+            <span>{t('رابط خارجي', 'External URL')}</span>
+          </button>
+        )}
       </div>
 
       {/* Tab 1: Upload from Device */}
@@ -215,7 +223,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
       )}
 
       {/* Tab 3: External URL */}
-      {activeTab === 'url' && (
+      {allowExternalUrl && activeTab === 'url' && (
         <form onSubmit={handleUrlSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">{t('رابط صورة مباشر', 'Direct Image URL')}</label>
