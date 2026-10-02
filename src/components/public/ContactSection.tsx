@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { createInquiry } from '../../services/inquiriesApi';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
-import { Mail, Phone, MessageSquare, Send, CheckCircle, Instagram, Youtube, Facebook, Twitter, Globe } from 'lucide-react';
+import { Mail, Phone, MessageSquare, Send, CheckCircle } from 'lucide-react';
+import { Social3DLinks } from './Social3DLinks';
 
 export const ContactSection: React.FC = () => {
   const { t } = useLanguage();
@@ -32,15 +33,6 @@ export const ContactSection: React.FC = () => {
       setSubmitError(error instanceof Error ? error.message : t('تعذر إرسال الرسالة.', 'Unable to submit inquiry.'));
     } finally { setSubmitting(false); }
   };
-
-  const socialIcons = [
-    { key: 'instagram', url: player.socialLinks?.instagram, label: 'Instagram', icon: <Instagram className="w-5 h-5" /> },
-    { key: 'tiktok', url: player.socialLinks?.tiktok, label: 'TikTok', icon: <Globe className="w-5 h-5" /> },
-    { key: 'youtube', url: player.socialLinks?.youtube, label: 'YouTube', icon: <Youtube className="w-5 h-5" /> },
-    { key: 'facebook', url: player.socialLinks?.facebook, label: 'Facebook', icon: <Facebook className="w-5 h-5" /> },
-    { key: 'twitter', url: player.socialLinks?.twitter, label: 'X / Twitter', icon: <Twitter className="w-5 h-5" /> },
-    { key: 'transfermarkt', url: player.socialLinks?.transfermarkt, label: 'Transfermarkt', icon: <Globe className="w-5 h-5" /> },
-  ].filter(item => Boolean(item.url?.trim()));
 
   return (
     <section id="contact" className="py-20 bg-[#0e1420] border-t border-slate-800">
@@ -115,28 +107,7 @@ export const ContactSection: React.FC = () => {
                 </a>
               </div>
 
-              {/* Social Channels (Strictly non-empty!) */}
-              {socialIcons.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 font-latin">
-                    {t('حسابات التواصل الاجتماعي', 'Social Profiles')}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {socialIcons.map((soc) => (
-                      <a
-                        key={soc.key}
-                        href={soc.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-cyan-400 hover:border-cyan-500 transition-all"
-                        title={soc.label}
-                      >
-                        {soc.icon}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <Social3DLinks />
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-500 font-latin">

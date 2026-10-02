@@ -10,6 +10,7 @@ import { PerformanceStats } from './components/public/PerformanceStats';
 import { OfficialHighlights } from './components/public/OfficialHighlights';
 import { VideoLibrary } from './components/public/VideoLibrary';
 import { PhotoGallery } from './components/public/PhotoGallery';
+import { PlayerMomentsCarousel } from './components/public/PlayerMomentsCarousel';
 import { MediaInterviews } from './components/public/MediaInterviews';
 import { PlayerCV } from './components/public/PlayerCV';
 import { ContactSection } from './components/public/ContactSection';
@@ -99,8 +100,9 @@ function AppContent() {
           {/* 8. Match Highlights & Video Vault */}
           <VideoLibrary onPlayVideo={setActiveVideo} />
 
-          {/* 9. Photo Gallery (58 images masonry) */}
+          {/* 9. Photo Gallery and Player Moments */}
           <PhotoGallery />
+          <PlayerMomentsCarousel />
 
           {/* 10. Media & Field Interviews */}
           <MediaInterviews />

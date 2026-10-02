@@ -58,6 +58,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
         </div>
 
       </div>
+      <div className="mt-8 text-center text-[10px] text-slate-500">
+        <span>{t('تصميم', 'Designed by')} </span>
+        <a
+          href="https://almkhlafi.carpetbazar.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-700 transition-colors duration-200 hover:text-cyan-400 hover:underline"
+        >
+          Abdullah-Almkhlafi2026
+        </a>
+      </div>
     </footer>
   );
 };
