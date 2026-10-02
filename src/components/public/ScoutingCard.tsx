@@ -150,21 +150,21 @@ export const ScoutingCard: React.FC = () => {
               </h4>
               
               <div className="space-y-2.5 mb-6 text-xs">
-                <a 
-                  href={`mailto:${player.email}`}
+                {player.email?.trim() && <a
+                  href={`mailto:${player.email.trim()}`}
                   className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-200 transition-colors"
                 >
                   <Mail className="w-3.5 h-3.5 text-cyan-400" />
                   <span className="truncate">{player.email}</span>
-                </a>
+                </a>}
 
-                <a 
-                  href={`tel:${player.phone}`}
+                {player.phone?.trim() && <a
+                  href={`tel:${player.phone.trim().replace(/[\s-]/g, '')}`}
                   className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-200 transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="font-latin">{player.phone}</span>
-                </a>
+                  <bdi dir="ltr" className="font-latin">{player.phone}</bdi>
+                </a>}
               </div>
             </div>
 

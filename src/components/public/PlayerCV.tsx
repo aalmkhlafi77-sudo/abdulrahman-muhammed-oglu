@@ -108,8 +108,8 @@ export const PlayerCV: React.FC = () => {
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الجنسية:' : 'Nationality:'}</strong> {cvLang === 'ar' ? player.nationalityAr : player.nationalityEn}</p>
               <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الموقع:' : 'Location:'}</strong> {cvLang === 'ar' ? player.locationAr : player.locationEn}</p>
               {age !== null && <p><strong className="text-slate-200">{cvLang === 'ar' ? 'العمر:' : 'Age:'}</strong> {age} {cvLang === 'ar' ? 'سنة' : 'years'}</p>}
-              <p><strong className="text-slate-200">{cvLang === 'ar' ? 'البريد:' : 'Email:'}</strong> {player.email}</p>
-              <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الهاتف:' : 'Phone:'}</strong> {player.phone}</p>
+              {player.email?.trim() && <p><strong className="text-slate-200">{cvLang === 'ar' ? 'البريد:' : 'Email:'}</strong> <bdi dir="ltr">{player.email}</bdi></p>}
+              {player.phone?.trim() && <p><strong className="text-slate-200">{cvLang === 'ar' ? 'الهاتف:' : 'Phone:'}</strong> <bdi dir="ltr">{player.phone}</bdi></p>}
             </div>
           </div>
 

@@ -4,6 +4,17 @@ import { createInquiry } from '../../services/inquiriesApi';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { Mail, Phone, MessageSquare, Send, CheckCircle } from 'lucide-react';
 import { Social3DLinks } from './Social3DLinks';
+import { WebsiteQrCode } from './WebsiteQrCode';
+
+const validWebUrl = (value?: string): string => {
+  if (!value?.trim()) return '';
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+  } catch {
+    return '';
+  }
+};
 
 export const ContactSection: React.FC = () => {
   const { t } = useLanguage();
@@ -19,6 +30,12 @@ export const ContactSection: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const email = player.email?.trim() || '';
+  const phone = player.phone?.trim() || '';
+  const phoneHref = phone.replace(/[\s-]/g, '');
+  const whatsapp = player.whatsapp?.trim() || '';
+  const whatsappDigits = whatsapp.replace(/\D/g, '');
+  const websiteUrl = validWebUrl(player.websiteUrl);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,57 +74,30 @@ export const ContactSection: React.FC = () => {
           {/* Left Column: Direct Contact Info & Socials */}
           <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-xl">
             <div>
-              <h3 className="text-xl font-bold text-white mb-6">
-                {t('معلومات التواصل المباشرة', 'Direct Contact Channels')}
-              </h3>
+              {(email || phoneHref || whatsappDigits) && <h3 className="mb-5 text-xl font-bold text-white">{t('معلومات التواصل المباشرة', 'Direct Contact Channels')}</h3>}
 
-              <div className="space-y-4 text-sm mb-8">
-                {/* Email */}
-                <a 
-                  href={`mailto:${player.email}`}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 hover:border-cyan-500/50 transition-colors group"
-                >
-                  <div className="p-3 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">{t('البريد الإلكتروني', 'Email Address')}</span>
-                    <span className="font-bold text-slate-100 group-hover:text-cyan-400 transition-colors font-latin">{player.email}</span>
-                  </div>
-                </a>
-
-                {/* Phone */}
-                <a 
-                  href={`tel:${player.phone}`}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 hover:border-cyan-500/50 transition-colors group"
-                >
-                  <div className="p-3 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">{t('رقم الهاتف', 'Phone Number')}</span>
-                    <span className="font-bold text-slate-100 group-hover:text-cyan-400 transition-colors font-latin">{player.phone}</span>
-                  </div>
-                </a>
-
-                {/* WhatsApp */}
-                <a 
-                  href={`https://wa.me/${player.whatsapp.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 hover:border-emerald-500/50 transition-colors group"
-                >
-                  <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors shrink-0">
-                    <MessageSquare className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 block">{t('واتساب مباشر', 'Direct WhatsApp')}</span>
-                    <span className="font-bold text-slate-100 group-hover:text-emerald-400 transition-colors font-latin">{player.whatsapp}</span>
-                  </div>
-                </a>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {email && <a href={`mailto:${email}`} className="flex min-w-0 items-center gap-4 rounded-xl border border-slate-800/80 bg-slate-950 p-4 transition-colors hover:border-cyan-500/50 group">
+                  <div className="shrink-0 rounded-lg bg-cyan-500/10 p-3 text-cyan-400 transition-colors group-hover:bg-cyan-500 group-hover:text-slate-950"><Mail className="h-5 w-5" /></div>
+                  <div className="min-w-0"><span className="block text-[11px] font-semibold text-slate-400">{t('البريد الإلكتروني', 'Email Address')}</span><bdi dir="ltr" className="block truncate font-latin font-bold text-slate-100 transition-colors group-hover:text-cyan-400">{email}</bdi></div>
+                </a>}
+                {phoneHref && <a href={`tel:${phoneHref}`} className="flex min-w-0 items-center gap-4 rounded-xl border border-slate-800/80 bg-slate-950 p-4 transition-colors hover:border-cyan-500/50 group">
+                  <div className="shrink-0 rounded-lg bg-cyan-500/10 p-3 text-cyan-400 transition-colors group-hover:bg-cyan-500 group-hover:text-slate-950"><Phone className="h-5 w-5" /></div>
+                  <div className="min-w-0"><span className="block text-[11px] font-semibold text-slate-400">{t('رقم الهاتف', 'Phone Number')}</span><bdi dir="ltr" className="block truncate font-latin font-bold text-slate-100 transition-colors group-hover:text-cyan-400">{phone}</bdi></div>
+                </a>}
+                {whatsappDigits && <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noopener noreferrer" className="flex min-w-0 items-center gap-4 rounded-xl border border-slate-800/80 bg-slate-950 p-4 transition-colors hover:border-emerald-500/50 group">
+                  <div className="shrink-0 rounded-lg bg-emerald-500/10 p-3 text-emerald-400 transition-colors group-hover:bg-emerald-500 group-hover:text-slate-950"><MessageSquare className="h-5 w-5" /></div>
+                  <div className="min-w-0"><span className="block text-[11px] font-semibold text-slate-400">{t('واتساب مباشر', 'Direct WhatsApp')}</span><bdi dir="ltr" className="block truncate font-latin font-bold text-slate-100 transition-colors group-hover:text-emerald-400">{whatsapp}</bdi></div>
+                </a>}
               </div>
 
               <Social3DLinks />
+              {websiteUrl && <>
+                <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm font-bold text-cyan-300 transition-colors hover:border-cyan-500/50 hover:text-cyan-200">
+                  <span>{t('الموقع الإلكتروني', 'Website')}</span><span dir="ltr" className="truncate font-latin">{websiteUrl}</span>
+                </a>
+                <WebsiteQrCode websiteUrl={websiteUrl} />
+              </>}
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-500 font-latin">

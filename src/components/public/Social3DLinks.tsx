@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Globe2, Instagram, Music2, Twitter, Youtube } from 'lucide-react';
+import { Facebook, Ghost, Globe2, Instagram, Music2, Twitter, Youtube } from 'lucide-react';
 import { usePlayerInfo } from '../../context/PlayerInfoContext';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -8,6 +8,7 @@ export const Social3DLinks: React.FC = () => {
   const { t } = useLanguage();
   const links = [
     { key: 'instagram', label: 'Instagram', url: player.socialLinks?.instagram, Icon: Instagram },
+    { key: 'snapchat', label: 'Snapchat', url: player.socialLinks?.snapchat, Icon: Ghost },
     { key: 'tiktok', label: 'TikTok', url: player.socialLinks?.tiktok, Icon: Music2 },
     { key: 'youtube', label: 'YouTube', url: player.socialLinks?.youtube, Icon: Youtube },
     { key: 'facebook', label: 'Facebook', url: player.socialLinks?.facebook, Icon: Facebook },
@@ -28,7 +29,7 @@ export const Social3DLinks: React.FC = () => {
   if (links.length === 0) return null;
 
   return (
-    <nav className="social-3d-links" aria-label={t('حسابات التواصل الاجتماعي', 'Social links')}>
+    <nav className="social-3d-links mt-6" aria-label={t('حسابات التواصل الاجتماعي', 'Social links')}>
       {links.map(({ key, label, url, Icon }) => (
         <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="social-3d-link">
           <span className="social-3d-link__surface"><Icon aria-hidden="true" className="h-5 w-5" /></span>

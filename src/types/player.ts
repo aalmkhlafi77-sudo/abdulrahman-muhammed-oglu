@@ -69,12 +69,14 @@ export interface PlayerInfo {
   // Social Links
   socialLinks: {
     instagram?: string;
+    snapchat?: string;
     tiktok?: string;
     youtube?: string;
     facebook?: string;
     twitter?: string;
     transfermarkt?: string;
   };
+  websiteUrl?: string;
 }
 
 export interface PlayerLanguage {

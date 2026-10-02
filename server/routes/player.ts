@@ -20,10 +20,21 @@ const safePlayerImage = (value: string): boolean => {
     && !value.includes('//');
 };
 
+const optionalHttpUrl = (value: unknown): boolean => {
+  if (value === undefined || value === '') return true;
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const requiredTextFields = [
   'nameAr', 'nameEn', 'nationalityAr', 'nationalityEn', 'locationAr', 'locationEn',
   'primaryPositionAr', 'primaryPositionEn', 'secondaryPositionAr', 'secondaryPositionEn',
-  'email', 'phone', 'whatsapp', 'objectiveAr', 'objectiveEn', 'educationAr', 'educationEn',
+  'objectiveAr', 'objectiveEn', 'educationAr', 'educationEn',
   'heroImage', 'profilePhoto',
 ] as const;
 
@@ -39,7 +50,17 @@ const validPlayer = (value: unknown): value is Record<string, unknown> => {
   }
   if (!Number.isFinite(player.heightCm) || !Number.isFinite(player.weightKg)) return false;
   if (!Array.isArray(player.positionsOrder) || player.positionsOrder.some((item) => !['primary', 'secondary'].includes(item as string))) return false;
-  if (!player.socialLinks || typeof player.socialLinks !== 'object' || Array.isArray(player.socialLinks)) return false;
+  if (player.socialLinks !== undefined && (!player.socialLinks || typeof player.socialLinks !== 'object' || Array.isArray(player.socialLinks))) return false;
+  if (player.email !== undefined && typeof player.email !== 'string') return false;
+  if (player.phone !== undefined && typeof player.phone !== 'string') return false;
+  if (player.whatsapp !== undefined && typeof player.whatsapp !== 'string') return false;
+  if (typeof player.email === 'string' && player.email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(player.email)) return false;
+  const socialKeys = ['instagram', 'snapchat', 'facebook', 'youtube', 'tiktok', 'twitter', 'transfermarkt'];
+  const socialLinks = (player.socialLinks || {}) as Record<string, unknown>;
+  for (const key of socialKeys) {
+    if (!optionalHttpUrl(socialLinks[key])) return false;
+  }
+  if (!optionalHttpUrl(player.websiteUrl)) return false;
   const imageFields = ['heroImage', 'profilePhoto', 'mobileHeroImage', 'playerCutoutImage', 'aboutImage', 'cvPreviewImage', 'socialShareImage'];
   for (const field of imageFields) {
     const image = player[field];

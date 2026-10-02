@@ -7,7 +7,49 @@ import { defaultImageDisplayConfig } from '../../data/initialData';
 import { MediaPicker } from '../common/MediaPicker';
 import { ImageDisplayControls } from '../common/ImageDisplayControls';
 import { HeroCustomizer } from '../common/HeroCustomizer';
-import { Save, Check, FileImage, Layout, Sparkles, Sliders, Trash2 } from 'lucide-react';
+import { Save, Check, FileImage, Layout, Sparkles, Sliders, Trash2, Phone } from 'lucide-react';
+
+interface OptionalInputProps {
+  label: string;
+  value: string;
+  type?: 'text' | 'email' | 'tel' | 'url';
+  dir?: 'ltr' | 'rtl';
+  onChange: (value: string) => void;
+  t: (ar: string, en: string) => string;
+}
+
+const OptionalInput: React.FC<OptionalInputProps> = ({ label, value, type = 'text', dir, onChange, t }) => (
+  <div className="min-w-0 space-y-1.5">
+    <label className="block text-xs font-semibold text-slate-300">{label}</label>
+    <div className="flex gap-2">
+      <input
+        type={type}
+        value={value}
+        dir={dir}
+        onChange={event => onChange(event.target.value)}
+        className="min-w-0 flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
+      />
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-300 transition-colors hover:bg-red-500/20"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        {t('مسح', 'Clear')}
+      </button>
+    </div>
+  </div>
+);
+
+const SOCIAL_FIELDS = [
+  { key: 'instagram', ar: 'Instagram', en: 'Instagram' },
+  { key: 'snapchat', ar: 'Snapchat', en: 'Snapchat' },
+  { key: 'facebook', ar: 'Facebook', en: 'Facebook' },
+  { key: 'youtube', ar: 'YouTube', en: 'YouTube' },
+  { key: 'tiktok', ar: 'TikTok', en: 'TikTok' },
+  { key: 'twitter', ar: 'X / Twitter', en: 'X / Twitter' },
+  { key: 'transfermarkt', ar: 'Transfermarkt', en: 'Transfermarkt' },
+] as const;
 
 export const AdminPlayerProfile: React.FC = () => {
   const { t } = useLanguage();
@@ -17,7 +59,7 @@ export const AdminPlayerProfile: React.FC = () => {
   const [heroConfig, setHeroConfig] = useState<HeroConfig>(sharedHero);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'hero' | 'imageControls'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'hero' | 'imageControls' | 'contact'>('profile');
 
   // Active Picker Modal states
   const [activePicker, setActivePicker] = useState<'profile' | 'hero' | 'mobileHero' | 'cutout' | null>(null);
@@ -29,8 +71,15 @@ export const AdminPlayerProfile: React.FC = () => {
       .then(async response => response.ok ? await response.json() as PlayerInfo : null)
       .then(async value => {
         if (value) {
-          setPlayer(value);
-          setSharedPlayer(value);
+          const normalizedPlayer: PlayerInfo = {
+            ...value,
+            email: value.email ?? '',
+            phone: value.phone ?? '',
+            whatsapp: value.whatsapp ?? '',
+            socialLinks: value.socialLinks ?? {},
+          };
+          setPlayer(normalizedPlayer);
+          setSharedPlayer(normalizedPlayer);
           const heroResponse = await fetch('/api/settings/hero');
           const storedHero = heroResponse.ok ? await heroResponse.json() as Partial<HeroConfig> | null : null;
           setHeroConfig(current => ({
@@ -72,21 +121,29 @@ export const AdminPlayerProfile: React.FC = () => {
         return;
       }
       const savedPlayer = await response.json() as PlayerInfo;
-      const heroResponse = await fetch('/api/settings/hero', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(heroConfig),
-      });
-      if (!heroResponse.ok) {
-        setSaveError(true);
-        return;
+      let savedHero: HeroConfig | null = null;
+      if (activeTab !== 'contact') {
+        savedHero = heroConfig;
       }
-      const savedHero = await heroResponse.json() as HeroConfig;
+      if (savedHero && JSON.stringify(heroConfig) !== JSON.stringify(sharedHero)) {
+        const heroResponse = await fetch('/api/settings/hero', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(heroConfig),
+        });
+        if (!heroResponse.ok) {
+          setSaveError(true);
+          return;
+        }
+        savedHero = await heroResponse.json() as HeroConfig;
+      }
       setPlayer(savedPlayer);
       setSharedPlayer(savedPlayer);
-      setHeroConfig(savedHero);
-      setSharedHero(savedHero);
+      if (savedHero) {
+        setHeroConfig(savedHero);
+        setSharedHero(savedHero);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
@@ -127,11 +184,11 @@ export const AdminPlayerProfile: React.FC = () => {
       )}
 
       {/* Tabs Header */}
-      <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-xs">
+      <div className="grid grid-cols-2 xl:grid-cols-4 items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-xs">
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+          className={`min-w-0 py-3 px-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
             activeTab === 'profile' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -142,7 +199,7 @@ export const AdminPlayerProfile: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('hero')}
-          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+          className={`min-w-0 py-3 px-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
             activeTab === 'hero' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -153,12 +210,20 @@ export const AdminPlayerProfile: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('imageControls')}
-          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+          className={`min-w-0 py-3 px-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
             activeTab === 'imageControls' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
           }`}
         >
           <Sliders className="w-4 h-4" />
           <span>{t('تحكم عرض الصور (Image Controls)', 'Image Display Controls')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('contact')}
+          className={`min-w-0 py-3 px-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'contact' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
+        >
+          <Phone className="h-4 w-4" />
+          <span>{t('التواصل والسوشيال ميديا', 'Contact & Social')}</span>
         </button>
       </div>
 
@@ -403,6 +468,49 @@ export const AdminPlayerProfile: React.FC = () => {
           </div>
 
         </form>
+      )}
+
+      {activeTab === 'contact' && (
+        <div className="space-y-5 text-xs">
+          <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+            <div className="border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white">{t('التواصل المباشر', 'Direct Contact')}</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <OptionalInput label="Email" type="email" value={player.email ?? ''} onChange={value => setPlayer(current => ({ ...current, email: value }))} t={t} />
+              <OptionalInput label="Phone" type="tel" value={player.phone ?? ''} dir="ltr" onChange={value => setPlayer(current => ({ ...current, phone: value }))} t={t} />
+              <OptionalInput label="WhatsApp" type="tel" value={player.whatsapp ?? ''} dir="ltr" onChange={value => setPlayer(current => ({ ...current, whatsapp: value }))} t={t} />
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+            <div className="border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white">{t('وسائل التواصل الاجتماعي', 'Social Media')}</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {SOCIAL_FIELDS.map(field => (
+                <OptionalInput
+                  key={field.key}
+                  label={t(field.ar, field.en)}
+                  type="url"
+                  dir="ltr"
+                  value={player.socialLinks?.[field.key] ?? ''}
+                  onChange={value => setPlayer(current => ({ ...current, socialLinks: { ...current.socialLinks, [field.key]: value } }))}
+                  t={t}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+            <div className="border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white">{t('الموقع الإلكتروني', 'Website')}</h3>
+            </div>
+            <div className="max-w-2xl">
+              <OptionalInput label="Website URL" type="url" dir="ltr" value={player.websiteUrl ?? ''} onChange={value => setPlayer(current => ({ ...current, websiteUrl: value }))} t={t} />
+            </div>
+          </section>
+        </div>
       )}
 
       {/* TAB 2: Hero Customizer */}
